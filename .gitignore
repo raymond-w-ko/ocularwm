@@ -1,0 +1,6 @@
+/Build/
+/Deploy/
+/ipch/
+*.opensdf
+*.sdf
+*.suo
