@@ -95,6 +95,7 @@
     <ClInclude Include="BaseApplication.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="OcularWM.h" />
+    <ClInclude Include="UserMetrics.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="BaseApplication.cpp" />

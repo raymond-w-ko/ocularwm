@@ -2,6 +2,8 @@
 
 #include <unordered_map>
 #include <memory>
+#include <iostream>
+#include <fstream>
 
 #include <windows.h>
 
