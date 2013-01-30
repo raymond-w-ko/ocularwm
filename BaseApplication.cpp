@@ -119,8 +119,9 @@ void BaseApplication::createFrameListener(void)
 
     mTrayMgr = new OgreBites::SdkTrayManager("InterfaceName", mWindow, mMouse, this);
     mTrayMgr->showFrameStats(OgreBites::TL_BOTTOMLEFT);
-    mTrayMgr->showLogo(OgreBites::TL_BOTTOMRIGHT);
+    //mTrayMgr->showLogo(OgreBites::TL_BOTTOMRIGHT);
     mTrayMgr->hideCursor();
+    mTrayMgr->toggleAdvancedFrameStats();
 
     // create a params panel for displaying sample details
     Ogre::StringVector items;
@@ -136,7 +137,8 @@ void BaseApplication::createFrameListener(void)
     items.push_back("Filtering");
     items.push_back("Poly Mode");
 
-    mDetailsPanel = mTrayMgr->createParamsPanel(OgreBites::TL_NONE, "DetailsPanel", 200, items);
+    mDetailsPanel = mTrayMgr->createParamsPanel(
+        OgreBites::TL_NONE, "DetailsPanel", 200, items);
     mDetailsPanel->setParamValue(9, "Bilinear");
     mDetailsPanel->setParamValue(10, "Solid");
     mDetailsPanel->hide();
@@ -220,8 +222,10 @@ bool BaseApplication::setup(void)
     setupResources();
 
     bool carryOn = configure();
-    if (!carryOn) return false;
+    if (!carryOn)
+        return false;
 
+    loadResources();
     chooseSceneManager();
     createCamera();
     createViewports();
@@ -231,8 +235,6 @@ bool BaseApplication::setup(void)
 
     // Create any resource listeners (for loading screens)
     createResourceListener();
-    // Load resources
-    loadResources();
 
     // Create the scene
     createScene();
@@ -264,13 +266,20 @@ bool BaseApplication::frameRenderingQueued(const Ogre::FrameEvent& evt)
 
         if (mDetailsPanel->isVisible())   // if details panel is visible, then update its contents
         {
-            mDetailsPanel->setParamValue(0, Ogre::StringConverter::toString(mCamera->getDerivedPosition().x));
-            mDetailsPanel->setParamValue(1, Ogre::StringConverter::toString(mCamera->getDerivedPosition().y));
-            mDetailsPanel->setParamValue(2, Ogre::StringConverter::toString(mCamera->getDerivedPosition().z));
-            mDetailsPanel->setParamValue(4, Ogre::StringConverter::toString(mCamera->getDerivedOrientation().w));
-            mDetailsPanel->setParamValue(5, Ogre::StringConverter::toString(mCamera->getDerivedOrientation().x));
-            mDetailsPanel->setParamValue(6, Ogre::StringConverter::toString(mCamera->getDerivedOrientation().y));
-            mDetailsPanel->setParamValue(7, Ogre::StringConverter::toString(mCamera->getDerivedOrientation().z));
+            mDetailsPanel->setParamValue(
+                0, Ogre::StringConverter::toString(mCamera->getDerivedPosition().x));
+            mDetailsPanel->setParamValue(
+                1, Ogre::StringConverter::toString(mCamera->getDerivedPosition().y));
+            mDetailsPanel->setParamValue(
+                2, Ogre::StringConverter::toString(mCamera->getDerivedPosition().z));
+            mDetailsPanel->setParamValue(
+                4, Ogre::StringConverter::toString(mCamera->getDerivedOrientation().w));
+            mDetailsPanel->setParamValue(
+                5, Ogre::StringConverter::toString(mCamera->getDerivedOrientation().x));
+            mDetailsPanel->setParamValue(
+                6, Ogre::StringConverter::toString(mCamera->getDerivedOrientation().y));
+            mDetailsPanel->setParamValue(
+                7, Ogre::StringConverter::toString(mCamera->getDerivedOrientation().z));
         }
     }
 
@@ -279,9 +288,12 @@ bool BaseApplication::frameRenderingQueued(const Ogre::FrameEvent& evt)
 //-------------------------------------------------------------------------------------
 bool BaseApplication::keyPressed( const OIS::KeyEvent &arg )
 {
-    if (mTrayMgr->isDialogVisible()) return true;   // don't process any more keys if dialog is up
+    // don't process any more keys if dialog is up
+    if (mTrayMgr->isDialogVisible())
+        return true;
 
-    if (arg.key == OIS::KC_F)   // toggle visibility of advanced frame stats
+    // toggle visibility of advanced frame stats
+    if (arg.key == OIS::KC_F)
     {
         mTrayMgr->toggleAdvancedFrameStats();
     }

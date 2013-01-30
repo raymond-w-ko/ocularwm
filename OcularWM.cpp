@@ -28,17 +28,20 @@ void OcularWM::createCamera(void)
     mLeftEyeCamera = mSceneMgr->createCamera("LeftEye");
     mLeftEyeCamera->setPosition(mUserMetrics.CalculateLeftEyeOffset());
     mLeftEyeCamera->setNearClipDistance(5.0f);
+    mLeftEyeCamera->setFOVy(Radian(Degree(110)));
     mLeftEyeCamera->lookAt(Ogre::Vector3(0, 160, -300.0f));
 
     mRightEyeCamera = mSceneMgr->createCamera("RightEye");
     mRightEyeCamera->setPosition(mUserMetrics.CalculateRightEyeOffset());
     mRightEyeCamera->setNearClipDistance(5.0f);
+    mRightEyeCamera->setFOVy(Radian(Degree(110)));
     mRightEyeCamera->lookAt(Ogre::Vector3(0, 160, -300.0f));
 
     // Position it at 500 in Z direction
-    mCameraMan = new OgreBites::SdkCameraMan(mLeftEyeCamera);
+    //mCameraMan = new OgreBites::SdkCameraMan(mLeftEyeCamera);
     mCamera = mLeftEyeCamera;
 
+    /*
     auto& left = mUserMetrics.CalculateLeftEyeOffset();
     auto& right = mUserMetrics.CalculateRightEyeOffset();
 
@@ -51,6 +54,7 @@ void OcularWM::createCamera(void)
         right.x << "\n" <<
         right.y << "\n" <<
         right.z << "\n";
+    */
 }
 
 void OcularWM::createViewports()
@@ -64,7 +68,7 @@ void OcularWM::createViewports()
     mLeftEyeCamera->setAspectRatio(
         Ogre::Real(mLeftViewport->getActualWidth()) /
         Ogre::Real(mLeftViewport->getActualHeight()));
-    mLeftViewport->setBackgroundColour(Ogre::ColourValue(0.1f, 0, 0));
+    mLeftViewport->setBackgroundColour(Ogre::ColourValue(0, 0, 0));
 
     mRightViewport = mWindow->addViewport(mRightEyeCamera, 9002,
                                          0.5f, 0.0f,
@@ -72,11 +76,26 @@ void OcularWM::createViewports()
     mRightEyeCamera->setAspectRatio(
         Ogre::Real(mRightViewport->getActualWidth()) /
         Ogre::Real(mRightViewport->getActualHeight()));
-    mRightViewport->setBackgroundColour(Ogre::ColourValue(0, 0, 0.1f));
+    mRightViewport->setBackgroundColour(Ogre::ColourValue(0, 0, 0));
+
+    Ogre::CompositorManager::ResourceMapIterator resourceIterator =
+        Ogre::CompositorManager::getSingleton().getResourceIterator();
+    while (resourceIterator.hasMoreElements()) {
+        mLog << resourceIterator.getNext()->getName() << "\n";
+    }
+
+    CompositorManager::getSingleton().addCompositor(mLeftViewport, "BarrelDistortion");
+    CompositorManager::getSingleton().setCompositorEnabled(
+        mLeftViewport, "BarrelDistortion", true);
+    //CompositorManager::getSingleton().addCompositor(mRightViewport, "BarrelDistortion");
+    //CompositorManager::getSingleton().setCompositorEnabled(
+        //mRightViewport, "BarrelDistortion", true);
 }
 
 void OcularWM::createScene()
 {
+    mSceneMgr->setSkyDome(true, "Examples/CloudySky", 32, 8);
+
     // create your scene here :)
     mSceneMgr->setAmbientLight(Ogre::ColourValue(0.5f, 0.5f, 0.5f));
 

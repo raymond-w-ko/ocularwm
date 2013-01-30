@@ -1,0 +1,29 @@
+vertex_program OcularWM/StdQuadVP glsl {
+	source StdQuad_vp.glsl
+    entry_point main
+}
+
+fragment_program OcularWM/BarrelWarp glsl {
+    source BarrelWarp.glsl
+    entry_point main
+}
+
+material OcularWM/Compositor/BarrelWarp {
+    technique {
+        pass {
+			depth_check off
+
+            vertex_program_ref OcularWM/StdQuadVP {
+            }
+
+            fragment_program_ref OcularWM/BarrelWarp {
+            }
+
+			texture_unit RT {
+				tex_coord_set 0
+				tex_address_mode clamp
+				filtering linear linear linear
+			}
+        }
+    }
+}
