@@ -293,31 +293,26 @@ bool BaseApplication::keyPressed( const OIS::KeyEvent &arg )
         return true;
 
     // toggle visibility of advanced frame stats
-    if (arg.key == OIS::KC_F)
-    {
+    if (arg.key == OIS::KC_F) {
         mTrayMgr->toggleAdvancedFrameStats();
     }
-    else if (arg.key == OIS::KC_G)   // toggle visibility of even rarer debugging details
-    {
-        if (mDetailsPanel->getTrayLocation() == OgreBites::TL_NONE)
-        {
+    // toggle visibility of even rarer debugging details
+    else if (arg.key == OIS::KC_G)   {
+        if (mDetailsPanel->getTrayLocation() == OgreBites::TL_NONE) {
             mTrayMgr->moveWidgetToTray(mDetailsPanel, OgreBites::TL_TOPRIGHT, 0);
             mDetailsPanel->show();
-        }
-        else
-        {
+        } else {
             mTrayMgr->removeWidgetFromTray(mDetailsPanel);
             mDetailsPanel->hide();
         }
     }
-    else if (arg.key == OIS::KC_T)   // cycle polygon rendering mode
-    {
+    // cycle polygon rendering mode
+    else if (arg.key == OIS::KC_T)   {
         Ogre::String newVal;
         Ogre::TextureFilterOptions tfo;
         unsigned int aniso;
 
-        switch (mDetailsPanel->getParamValue(9).asUTF8()[0])
-        {
+        switch (mDetailsPanel->getParamValue(9).asUTF8()[0]) {
         case 'B':
             newVal = "Trilinear";
             tfo = Ogre::TFO_TRILINEAR;
@@ -343,8 +338,8 @@ bool BaseApplication::keyPressed( const OIS::KeyEvent &arg )
         Ogre::MaterialManager::getSingleton().setDefaultAnisotropy(aniso);
         mDetailsPanel->setParamValue(9, newVal);
     }
-    else if (arg.key == OIS::KC_R)   // cycle polygon rendering mode
-    {
+    // cycle polygon rendering mode
+    else if (arg.key == OIS::KC_R) {
         Ogre::String newVal;
         Ogre::PolygonMode pm;
 
@@ -366,16 +361,15 @@ bool BaseApplication::keyPressed( const OIS::KeyEvent &arg )
         mCamera->setPolygonMode(pm);
         mDetailsPanel->setParamValue(10, newVal);
     }
-    else if(arg.key == OIS::KC_F5)   // refresh all textures
-    {
+    // refresh all textures
+    else if(arg.key == OIS::KC_F5)   {
         Ogre::TextureManager::getSingleton().reloadAll();
     }
-    else if (arg.key == OIS::KC_SYSRQ)   // take a screenshot
-    {
+    // take a screenshot
+    else if (arg.key == OIS::KC_SYSRQ)   {
         mWindow->writeContentsToTimestampedFile("screenshot", ".jpg");
     }
-    else if (arg.key == OIS::KC_ESCAPE)
-    {
+    else if (arg.key == OIS::KC_ESCAPE) {
         mShutDown = true;
     }
 

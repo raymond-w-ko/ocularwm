@@ -5,6 +5,8 @@
 #include <iostream>
 #include <fstream>
 
+#include <boost/lexical_cast.hpp>
+
 #include <windows.h>
 
 #include <OGRE/OgreRoot.h>

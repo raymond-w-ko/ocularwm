@@ -7,7 +7,7 @@ varying vec2 uv;
 // Determines how strong the barrel distortion is, positive values will
 // pincushion instead.  The current value is derived from John Carmack D3BFG
 // screenshots.
-float kBarrelFactor = (-81.0/10.0);
+float kBarrelFactor = (-81.0 / 10.0);
 
 void main()
 {   
