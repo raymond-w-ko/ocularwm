@@ -133,7 +133,7 @@ void OcularWM::createScene()
 
     VirtualMonitor screen0 = createVirtualMonitor(0);
     screen0.mSceneNode->setScale(50, 50, 50);
-    screen0.mSceneNode->setPosition(0, 160, -70);
+    screen0.mSceneNode->setPosition(0, 160, -45);
     mMonitors.push_back(screen0);
 }
 
@@ -151,7 +151,7 @@ VirtualMonitor OcularWM::createVirtualMonitor(unsigned int id)
         TEX_TYPE_2D,
         2000, 2000,
         0,
-        PF_BYTE_BGRA,
+        PF_BYTE_BGR,
         TU_DYNAMIC_WRITE_ONLY_DISCARDABLE);
     mon.mDynamicTexture = texture;
 
@@ -245,16 +245,16 @@ VirtualMonitor OcularWM::createVirtualMonitor(unsigned int id)
     ManualObject* object = mSceneMgr->createManualObject("ManualObject" + suffix);
     object->begin(material_name, RenderOperation::OT_TRIANGLE_STRIP);
     object->position(-1, -1, +0);
-    object->textureCoord(0, 1);
+    object->textureCoord(0, 0);
 
     object->position(+1, -1, +0);
-    object->textureCoord(1, 1);
-
-    object->position(+1, +1, +0);
     object->textureCoord(1, 0);
 
+    object->position(+1, +1, +0);
+    object->textureCoord(1, 1);
+
     object->position(-1, +1, +0);
-    object->textureCoord(0, 0);
+    object->textureCoord(0, 1);
 
     object->index(0);
     object->index(1);
@@ -276,71 +276,56 @@ bool OcularWM::frameRenderingQueued(const Ogre::FrameEvent& evt)
     if (!BaseApplication::frameRenderingQueued(evt))
         return false;
 
-    HWND chrome = 0;
+    HWND winId = 0;
     do {
-        chrome = FindWindowEx(NULL, chrome, "Chrome_WidgetWin_1", NULL);
-    } while (GetWindowTextLength(chrome) == 0);
-    if (!chrome)
+        winId = FindWindowEx(NULL, winId, "Chrome_WidgetWin_1", NULL);
+    } while (GetWindowTextLength(winId) == 0);
+    if (!winId)
         return true;
 
-    HDC activeDC = ::GetWindowDC(chrome);
-    if (activeDC) {
-        HDC copyDC = ::CreateCompatibleDC(activeDC);
-        if (copyDC) {
-            RECT r;
-            ::GetWindowRect(chrome, &r);
-            int width = r.right - r.left;
-            int height = r.bottom - r.top;
-            HBITMAP hBitmap = ::CreateCompatibleBitmap(activeDC, width, height);
-            if (hBitmap) {
-                if (::SelectObject(copyDC, hBitmap) &&
-                    ::PrintWindow(chrome, copyDC, 0))
-                {
-                    auto& pixelBuffer = mMonitors[0].mPixelBuffer;
-                    pixelBuffer->lock(HardwareBuffer::HBL_DISCARD);
-                    const PixelBox& pixelBox = pixelBuffer->getCurrentLock();
-                    uint8* pixels = static_cast<uint8*>(pixelBox.data);
+    int w = 2000;
+    int h = 2000;
+    int x = 0;
+    int y = 0;
 
-                    BITMAPINFO info = {0};
-                    /*
-                    if (0 == ::GetDIBits(copyDC, hBitmap,
-                                         0, 0, NULL, &info, DIB_RGB_COLORS))
-                    {
-                        goto cleanup;
-                    }
-                    */
+    RECT r;
+    GetClientRect(winId, &r);
+    if (w < 0) w = r.right - r.left;
+    if (h < 0) h = r.bottom - r.top;
+    // Create and setup bitmap
+    HDC display_dc = GetDC(0);
+    HDC bitmap_dc = CreateCompatibleDC(display_dc);
+    HBITMAP bitmap = CreateCompatibleBitmap(display_dc, w, h);
+    HGDIOBJ null_bitmap = SelectObject(bitmap_dc, bitmap);
 
-                    info.bmiHeader.biSize = sizeof(info.bmiHeader);
-                    info.bmiHeader.biPlanes = 1;
-                    info.bmiHeader.biBitCount = 32;
-                    info.bmiHeader.biCompression = BI_RGB;
-                    /*
-                    info.bmiHeader.biHeight =
-                        (info.bmiHeader.biHeight < 0) ?
-                        (-info.bmiHeader.biHeight) :
-                        (info.bmiHeader.biHeight);
-                    */
-                    info.bmiHeader.biHeight = 2000;
-                    info.bmiHeader.biWidth = 2000;
+    // copy data
+    HDC window_dc = GetDC(winId);
+    BitBlt(bitmap_dc, 0, 0, w, h, window_dc, x, y, SRCCOPY);
 
-                    if(0 == ::GetDIBits(copyDC, hBitmap,
-                                        0, info.bmiHeader.biHeight,
-                                        (LPVOID)pixels, &info, DIB_RGB_COLORS))
-                    {
-                        goto cleanup;
-                    }
+    // clean up all but bitmap
+    ReleaseDC(winId, window_dc);
+    SelectObject(bitmap_dc, null_bitmap);
+    DeleteDC(bitmap_dc);
 
-                    cleanup:
+    auto& pixelBuffer = mMonitors[0].mPixelBuffer;
+    pixelBuffer->lock(HardwareBuffer::HBL_DISCARD);
+    const PixelBox& pixelBox = pixelBuffer->getCurrentLock();
+    uint8* pixels = static_cast<uint8*>(pixelBox.data);
 
-                    pixelBuffer->unlock();
-                }
+    BITMAPINFO info = {0};
+    info.bmiHeader.biSize = sizeof(info.bmiHeader);
+    info.bmiHeader.biWidth = w;
+    info.bmiHeader.biHeight = h;
+    info.bmiHeader.biPlanes = 1;
+    info.bmiHeader.biBitCount = 32;
+    info.bmiHeader.biCompression = BI_RGB;
 
-                ::DeleteObject(hBitmap);
-            }
-            ::DeleteObject(copyDC);
-        }
-        ::ReleaseDC(chrome, activeDC);
-    }
+    GetDIBits(display_dc, bitmap, 0, h, pixels, &info, DIB_RGB_COLORS);
+
+    pixelBuffer->unlock();
+
+    DeleteObject(bitmap);
+    ReleaseDC(0, display_dc);
 
     return true;
 }
