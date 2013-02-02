@@ -120,11 +120,11 @@ void OcularWM::createScene()
     // create your scene here :)
     mSceneMgr->setAmbientLight(Ogre::ColourValue(0.5f, 0.5f, 0.5f));
 
-    Entity* ogreHead = mSceneMgr->createEntity("Head", "ogrehead.mesh");
-    SceneNode* headNode = mSceneMgr->getRootSceneNode()->createChildSceneNode(
-        "HeadNode");
-    headNode->attachObject(ogreHead);
-    headNode->setPosition(Ogre::Vector3(0, 160, -75.0f));
+    //Entity* ogreHead = mSceneMgr->createEntity("Head", "ogrehead.mesh");
+    //SceneNode* headNode = mSceneMgr->getRootSceneNode()->createChildSceneNode(
+        //"HeadNode");
+    //headNode->attachObject(ogreHead);
+    //headNode->setPosition(Ogre::Vector3(0, 160, -75.0f));
     //headNode->setScale(0.1f, 0.1f, 0.1f);
     //headNode->setScale(50, 50, 50);
 

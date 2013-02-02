@@ -39,6 +39,9 @@
     <ClInclude Include="tinyxml\tinyxml.h">
       <Filter>Header Files\TinyXML</Filter>
     </ClInclude>
+    <ClInclude Include="DotSceneLoader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -64,6 +67,9 @@
     </ClCompile>
     <ClCompile Include="tinyxml\tinyxmlerror.cpp">
       <Filter>Source Files\TinyXML</Filter>
+    </ClCompile>
+    <ClCompile Include="DotSceneLoader.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

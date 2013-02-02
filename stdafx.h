@@ -30,3 +30,5 @@
 
 #include <OGRE/SdkTrays.h>
 #include <OGRE/SdkCameraMan.h>
+
+#include "tinyxml.h"

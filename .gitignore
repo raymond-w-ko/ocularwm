@@ -1,10 +1,7 @@
 /Build/
-/Deploy/Debug/*.dll
-/Deploy/Debug/*.exe
-/Deploy/Debug/*.log
-/Deploy/Release/*.dll
-/Deploy/Release/*.exe
-/Deploy/Release/*.log
+/Deploy/*.dll
+/Deploy/*.exe
+/Deploy/*.log
 /ipch/
 *.opensdf
 *.sdf
