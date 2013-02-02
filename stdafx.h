@@ -1,5 +1,7 @@
 #pragma once
 
+#define TIXML_USE_STL
+
 #include <unordered_map>
 #include <memory>
 #include <iostream>
