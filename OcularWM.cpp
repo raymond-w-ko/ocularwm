@@ -131,144 +131,11 @@ void OcularWM::createScene()
     Light* light = mSceneMgr->createLight("MainLight");
     light->setPosition(0, 160, 0.0f);
 
-    VirtualMonitor screen0 = createVirtualMonitor(0);
-    screen0.mSceneNode->setScale(50, 50, 50);
-    screen0.mSceneNode->setPosition(0, 160, -45);
-    mMonitors.push_back(screen0);
-}
-
-VirtualMonitor OcularWM::createVirtualMonitor(unsigned int id)
-{
-    VirtualMonitor mon;
-    mon.mID = id;
-
-    string suffix = lexical_cast<string>(id);
-
-    string texture_name = "DynamicTexture" + suffix;
-    TexturePtr texture = TextureManager::getSingleton().createManual(
-        texture_name,
-        ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME,
-        TEX_TYPE_2D,
-        2000, 2000,
-        0,
-        PF_BYTE_BGR,
-        TU_DYNAMIC_WRITE_ONLY_DISCARDABLE);
-    mon.mDynamicTexture = texture;
-
-    HardwarePixelBufferSharedPtr pixelBuffer = texture->getBuffer();
-    mon.mPixelBuffer = pixelBuffer;
-
-    // Lock the pixel buffer and get a pixel box
-    // for best performance use HBL_DISCARD!
-    pixelBuffer->lock(HardwareBuffer::HBL_DISCARD);
-    const PixelBox& pixelBox = pixelBuffer->getCurrentLock();
-
-    uint8* pDest = static_cast<uint8*>(pixelBox.data);
-    uint8* pPixels = pDest;
-
-    // Fill in some pixel data. This will give a semi-transparent blue,
-    // but this is of course dependent on the chosen pixel format.
-    /*
-    for (size_t j = 0; j < 512; j++) {
-        for(size_t i = 0; i < 1024; i++) {
-            *pDest++ = 255; // B
-            *pDest++ = 0; // G
-            *pDest++ = 0; // R
-            *pDest++ = 127; // A
-        }
-    }
-    for (size_t j = 0; j < 512; j++) {
-        for(size_t i = 0; i < 1024; i++) {
-            *pDest++ = 0; // B
-            *pDest++ = 0; // G
-            *pDest++ = 255; // R
-            *pDest++ = 127; // A
-        }
-    }
-
-    // UL
-    for (size_t y = 0; y < 100; ++y) {
-        for (size_t x = 0; x < 100; ++x) {
-            uint8* pixel = &pPixels[(y * 1024 * 4) + (x * 4)];
-            pixel[0] = 0;
-            pixel[1] = 255;
-            pixel[2] = 0;
-            pixel[3] = 255;
-        }
-    }
-
-    // UR
-    for (size_t y = 0; y < 100; ++y) {
-        for (size_t x = 1024 - 100; x < 1024; ++x) {
-            uint8* pixel = &pPixels[(y * 1024 * 4) + (x * 4)];
-            pixel[0] = 0;
-            pixel[1] = 255;
-            pixel[2] = 255;
-            pixel[3] = 255;
-        }
-    }
-
-    // LL
-    for (size_t y = 1024 - 100; y < 1024; ++y) {
-        for (size_t x = 0; x < 100; ++x) {
-            uint8* pixel = &pPixels[(y * 1024 * 4) + (x * 4)];
-            pixel[0] = 0;
-            pixel[1] = 0;
-            pixel[2] = 0;
-            pixel[3] = 255;
-        }
-    }
-
-    // LR
-    for (size_t y = 1024 - 100; y < 1024; ++y) {
-        for (size_t x = 1024 - 100; x < 1024; ++x) {
-            uint8* pixel = &pPixels[(y * 1024 * 4) + (x * 4)];
-            pixel[0] = 255;
-            pixel[1] = 255;
-            pixel[2] = 255;
-            pixel[3] = 255;
-        }
-    }
-    */
-
-
-    pixelBuffer->unlock();
-
-    string material_name = "DynamicTextureMaterial" + suffix;
-    MaterialPtr material = MaterialManager::getSingleton().create(
-        material_name,
-        ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
-    material->getTechnique(0)->getPass(0)->createTextureUnitState(texture_name);
-    material->getTechnique(0)->getPass(0)->setSceneBlending(SBT_TRANSPARENT_ALPHA);
-    mon.mMaterial = material;
-
-    ManualObject* object = mSceneMgr->createManualObject("ManualObject" + suffix);
-    object->begin(material_name, RenderOperation::OT_TRIANGLE_STRIP);
-    object->position(-1, -1, +0);
-    object->textureCoord(0, 0);
-
-    object->position(+1, -1, +0);
-    object->textureCoord(1, 0);
-
-    object->position(+1, +1, +0);
-    object->textureCoord(1, 1);
-
-    object->position(-1, +1, +0);
-    object->textureCoord(0, 1);
-
-    object->index(0);
-    object->index(1);
-    object->index(2);
-    object->index(3);
-    object->index(0);
-    object->end();
-    mon.mManualObject = object;
-
-    SceneNode* node = mSceneMgr->getRootSceneNode()->createChildSceneNode();
-    node->attachObject(object);
-    mon.mSceneNode = node;
-
-    return mon;
+    VirtualMonitorPtr mon0 = VirtualMonitor::Create(
+        mSceneMgr, "primary", 1920, 1080);
+    mon0->SetScale(52);
+    mon0->SetPosition(0, 160, -45);
+    mMonitors.push_back(mon0);
 }
 
 bool OcularWM::frameRenderingQueued(const Ogre::FrameEvent& evt)
@@ -283,8 +150,8 @@ bool OcularWM::frameRenderingQueued(const Ogre::FrameEvent& evt)
     if (!winId)
         return true;
 
-    int w = 2000;
-    int h = 2000;
+    int w = -1;
+    int h = -1;
     int x = 0;
     int y = 0;
 
@@ -307,10 +174,9 @@ bool OcularWM::frameRenderingQueued(const Ogre::FrameEvent& evt)
     SelectObject(bitmap_dc, null_bitmap);
     DeleteDC(bitmap_dc);
 
-    auto& pixelBuffer = mMonitors[0].mPixelBuffer;
-    pixelBuffer->lock(HardwareBuffer::HBL_DISCARD);
-    const PixelBox& pixelBox = pixelBuffer->getCurrentLock();
-    uint8* pixels = static_cast<uint8*>(pixelBox.data);
+    mMonitors[0]->ChangeResolution(w, h);
+
+    uint8* pixels = static_cast<uint8*>(mMonitors[0]->Lock().data);
 
     BITMAPINFO info = {0};
     info.bmiHeader.biSize = sizeof(info.bmiHeader);
@@ -322,7 +188,7 @@ bool OcularWM::frameRenderingQueued(const Ogre::FrameEvent& evt)
 
     GetDIBits(display_dc, bitmap, 0, h, pixels, &info, DIB_RGB_COLORS);
 
-    pixelBuffer->unlock();
+    mMonitors[0]->Unlock();
 
     DeleteObject(bitmap);
     ReleaseDC(0, display_dc);
