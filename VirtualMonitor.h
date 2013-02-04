@@ -6,7 +6,7 @@ public:
         unsigned char b;
         unsigned char g;
         unsigned char r;
-        //unsigned char a;
+        unsigned char a;
     };
 
     static std::shared_ptr<VirtualMonitor> Create(
@@ -32,6 +32,8 @@ public:
     void SetScale(float scale);
     void SetPosition(float x, float y, float z);
     void UpdateScale();
+
+    void WritePixels(Ogre::uint8* src);
 
 protected:
     VirtualMonitor(

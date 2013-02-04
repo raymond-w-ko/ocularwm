@@ -3,13 +3,12 @@
 #include "BaseApplication.h"
 #include "UserMetrics.h"
 #include "VirtualMonitor.h"
+#include "ScreenshotProducer.h"
 
 class OcularWM : public BaseApplication {
 public:
     OcularWM(void);
     virtual ~OcularWM(void);
-
-    static BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lParam);
 
 protected:
     virtual void createCamera(void);
@@ -30,7 +29,11 @@ protected:
 
     std::ofstream mLog;
     bool mIsBarrelWarpEnabled;
-    std::vector<VirtualMonitorPtr> mMonitors;
 
-    std::vector<std::string> mWindowTitles;
+    ScreenshotProducer mScreenshotProducer;
+
+    std::vector<VirtualMonitorPtr> mMonitors;
+    std::unordered_map<HWND, VirtualMonitorPtr> mMonitorFromHwnd;
+
+    //std::vector<std::string> mWindowTitles;
 };

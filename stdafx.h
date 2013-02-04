@@ -6,6 +6,9 @@
 #include <memory>
 #include <iostream>
 #include <fstream>
+#include <atomic>
+#include <thread>
+#include <mutex>
 
 #include <boost/lexical_cast.hpp>
 

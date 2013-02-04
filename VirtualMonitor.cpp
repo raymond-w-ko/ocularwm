@@ -47,6 +47,7 @@ void VirtualMonitor::createMaterial()
     mMaterial->getTechnique(0)->getPass(0)->createTextureUnitState(
         mTexture->getName());
     mMaterial->getTechnique(0)->getPass(0)->setSceneBlending(SBT_TRANSPARENT_ALPHA);
+    mMaterial->getTechnique(0)->getPass(0)->setEmissive(1, 1, 1);
 }
 
 void VirtualMonitor::createObject()
@@ -86,7 +87,7 @@ void VirtualMonitor::ChangeResolution(int width, int height)
     mWidth = width;
     mHeight = height;
     mAspectRatio = static_cast<float>(mWidth) / static_cast<float>(mHeight);
-    mPixelSize = 3; // for B, G, R
+    mPixelSize = 4; // for B, G, R
 
     mTexture = TextureManager::getSingleton().createManual(
         "VirtualMonitorTexture" + lexical_cast<string>(msResourceCounter++),
@@ -94,7 +95,7 @@ void VirtualMonitor::ChangeResolution(int width, int height)
         TEX_TYPE_2D,
         mWidth, mHeight,
         0, // TODO: do mipmaps visually improve this / even work?
-        PF_BYTE_BGR, // TODO: does Windows GDI need an alpha channel?
+        PF_BYTE_BGR,
         TU_DYNAMIC_WRITE_ONLY_DISCARDABLE);
 
     mPixelBuffer = mTexture->getBuffer();
@@ -123,7 +124,7 @@ void VirtualMonitor::Blank(Ogre::ColourValue colour)
             pixel.b = colour.g;
             pixel.g = colour.g;
             pixel.r = colour.r;
-            //pixel.a = colour.a;
+            pixel.a = colour.a;
         }
     }
 
@@ -160,4 +161,12 @@ void VirtualMonitor::SetPosition(float x, float y, float z)
 void VirtualMonitor::UpdateScale()
 {
     this->SetScale(mUserScale);
+}
+
+void VirtualMonitor::WritePixels(uint8* src)
+{
+    uint8* dst = static_cast<uint8*>(this->Lock().data);
+    const size_t count = mWidth * mPixelSize * mHeight;
+    memcpy(dst, src, count);
+    this->Unlock();
 }

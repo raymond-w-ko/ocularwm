@@ -12,6 +12,8 @@ OcularWM::OcularWM() :
     mLog("OcularWM.log", ios_base::trunc),
     mIsBarrelWarpEnabled(false)
 {
+    ::SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_HIGHEST);
+
     // my personal metrics
     mUserMetrics.SetHeightFromInches(68);
     // TODO measure these
@@ -22,6 +24,7 @@ OcularWM::OcularWM() :
 
 OcularWM::~OcularWM()
 {
+    mScreenshotProducer.RequestAndWaitForExit();
 }
 
 //-------------------------------------------------------------------------------------
@@ -114,112 +117,61 @@ bool OcularWM::keyPressed( const OIS::KeyEvent &arg )
 
 void OcularWM::createScene()
 {
-    //mSceneMgr->setSkyDome(true, "Examples/CloudySky", 32, 8);
     mSceneMgr->setSkyBox(true, "Examples/CloudyNoonSkyBox");
 
-    // create your scene here :)
-    mSceneMgr->setAmbientLight(Ogre::ColourValue(0.5f, 0.5f, 0.5f));
+    // make everything broken unless they are self emissive
+    mSceneMgr->setAmbientLight(Ogre::ColourValue(0.0f, 0.0f, 0.0f));
 
-    //Entity* ogreHead = mSceneMgr->createEntity("Head", "ogrehead.mesh");
-    //SceneNode* headNode = mSceneMgr->getRootSceneNode()->createChildSceneNode(
-        //"HeadNode");
-    //headNode->attachObject(ogreHead);
-    //headNode->setPosition(Ogre::Vector3(0, 160, -75.0f));
-    //headNode->setScale(0.1f, 0.1f, 0.1f);
-    //headNode->setScale(50, 50, 50);
-
-    Light* light = mSceneMgr->createLight("MainLight");
-    light->setPosition(0, 160, 0.0f);
-
+    /*
     VirtualMonitorPtr mon0 = VirtualMonitor::Create(
         mSceneMgr, "primary", 1920, 1080);
     mon0->SetScale(52);
     mon0->SetPosition(0, 160, -45);
     mMonitors.push_back(mon0);
+    */
 
+    mScreenshotProducer.StartBackgroundLoop();
+
+    /*
     mWindowTitles.clear();
-    EnumWindows(OcularWM::EnumWindowsProc, reinterpret_cast<LPARAM>(this));
 
     string titles;
     for (auto& title : mWindowTitles) {
         titles += title + "\n";
     }
-    ::MessageBox(nullptr, titles.c_str(), "", MB_OK);
+    */
+    //::MessageBox(nullptr, titles.c_str(), "", MB_OK);
 }
 
-BOOL CALLBACK OcularWM::EnumWindowsProc(HWND hwnd, LPARAM lParam)
-{
-    OcularWM* self = reinterpret_cast<OcularWM*>(lParam);
-
-    char szTitle[1024];
-    char szClass[1024];
-    ::GetClassName(hwnd, szClass, sizeof(szClass));
-    ::GetWindowText(hwnd , szTitle, sizeof(szTitle));
-    if (::IsWindowVisible(hwnd)) {
-        string line;
-        line += szClass;
-        line += " ::: ";
-        line += szTitle;
-        self->mWindowTitles.push_back(line);
-    }
-
-    return TRUE;
-}
+static int32 sScreenOffset = 0;
 
 bool OcularWM::frameRenderingQueued(const Ogre::FrameEvent& evt)
 {
     if (!BaseApplication::frameRenderingQueued(evt))
         return false;
 
-    HWND winId = ::GetDesktopWindow();
-    do {
-        winId = FindWindowEx(NULL, winId, "Chrome_WidgetWin_1", NULL);
-    } while (GetWindowTextLength(winId) == 0);
-    if (!winId)
-        return true;
+    std::vector<HWND> hwnds = mScreenshotProducer.GetVisibleWindows();
+    for (HWND hwnd : hwnds) {
+        ScreenshotPtr shot =mScreenshotProducer.Get(hwnd);
+        if (!shot)
+            continue;
 
-    int w = -1;
-    int h = -1;
-    int x = 0;
-    int y = 0;
+        HWND hwnd = shot->hwnd;
 
-    RECT r;
-    GetClientRect(winId, &r);
-    if (w < 0) w = r.right - r.left;
-    if (h < 0) h = r.bottom - r.top;
-    // Create and setup bitmap
-    HDC display_dc = GetDC(0);
-    HDC bitmap_dc = CreateCompatibleDC(display_dc);
-    HBITMAP bitmap = CreateCompatibleBitmap(display_dc, w, h);
-    HGDIOBJ null_bitmap = SelectObject(bitmap_dc, bitmap);
+        if (!mMonitorFromHwnd[hwnd]) {
+            VirtualMonitorPtr monitor = VirtualMonitor::Create(
+                mSceneMgr, "", shot->mWidth, shot->mHeight);
+            monitor->SetScale(52);
+            monitor->SetPosition(sScreenOffset, 160, -45);
+            sScreenOffset -= 300;
 
-    // copy data
-    HDC window_dc = GetDC(winId);
-    BitBlt(bitmap_dc, 0, 0, w, h, window_dc, x, y, SRCCOPY);
+            mMonitors.push_back(monitor);
+            mMonitorFromHwnd[hwnd] = monitor;
+        }
 
-    // clean up all but bitmap
-    ReleaseDC(winId, window_dc);
-    SelectObject(bitmap_dc, null_bitmap);
-    DeleteDC(bitmap_dc);
-
-    mMonitors[0]->ChangeResolution(w, h);
-
-    uint8* pixels = static_cast<uint8*>(mMonitors[0]->Lock().data);
-
-    BITMAPINFO info = {0};
-    info.bmiHeader.biSize = sizeof(info.bmiHeader);
-    info.bmiHeader.biWidth = w;
-    info.bmiHeader.biHeight = h;
-    info.bmiHeader.biPlanes = 1;
-    info.bmiHeader.biBitCount = 32;
-    info.bmiHeader.biCompression = BI_RGB;
-
-    GetDIBits(display_dc, bitmap, 0, h, pixels, &info, DIB_RGB_COLORS);
-
-    mMonitors[0]->Unlock();
-
-    DeleteObject(bitmap);
-    ReleaseDC(0, display_dc);
+        mMonitorFromHwnd[hwnd]->ChangeResolution(shot->mWidth, shot->mHeight);
+        mMonitorFromHwnd[hwnd]->WritePixels(shot->mPixels);
+    }
 
     return true;
 }

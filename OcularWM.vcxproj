@@ -94,6 +94,7 @@
   <ItemGroup>
     <ClInclude Include="BaseApplication.h" />
     <ClInclude Include="DotSceneLoader.h" />
+    <ClInclude Include="ScreenshotProducer.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="OcularWM.h" />
     <ClInclude Include="tinyxml\tinystr.h" />
@@ -105,6 +106,7 @@
     <ClCompile Include="BaseApplication.cpp" />
     <ClCompile Include="DotSceneLoader.cpp" />
     <ClCompile Include="EntryPoint.cpp" />
+    <ClCompile Include="ScreenshotProducer.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
