@@ -9,6 +9,8 @@ public:
     OcularWM(void);
     virtual ~OcularWM(void);
 
+    static BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lParam);
+
 protected:
     virtual void createCamera(void);
     virtual void createViewports();
@@ -29,4 +31,6 @@ protected:
     std::ofstream mLog;
     bool mIsBarrelWarpEnabled;
     std::vector<VirtualMonitorPtr> mMonitors;
+
+    std::vector<std::string> mWindowTitles;
 };

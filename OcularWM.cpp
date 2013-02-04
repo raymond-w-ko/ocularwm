@@ -136,6 +136,34 @@ void OcularWM::createScene()
     mon0->SetScale(52);
     mon0->SetPosition(0, 160, -45);
     mMonitors.push_back(mon0);
+
+    mWindowTitles.clear();
+    EnumWindows(OcularWM::EnumWindowsProc, reinterpret_cast<LPARAM>(this));
+
+    string titles;
+    for (auto& title : mWindowTitles) {
+        titles += title + "\n";
+    }
+    ::MessageBox(nullptr, titles.c_str(), "", MB_OK);
+}
+
+BOOL CALLBACK OcularWM::EnumWindowsProc(HWND hwnd, LPARAM lParam)
+{
+    OcularWM* self = reinterpret_cast<OcularWM*>(lParam);
+
+    char szTitle[1024];
+    char szClass[1024];
+    ::GetClassName(hwnd, szClass, sizeof(szClass));
+    ::GetWindowText(hwnd , szTitle, sizeof(szTitle));
+    if (::IsWindowVisible(hwnd)) {
+        string line;
+        line += szClass;
+        line += " ::: ";
+        line += szTitle;
+        self->mWindowTitles.push_back(line);
+    }
+
+    return TRUE;
 }
 
 bool OcularWM::frameRenderingQueued(const Ogre::FrameEvent& evt)
@@ -143,7 +171,7 @@ bool OcularWM::frameRenderingQueued(const Ogre::FrameEvent& evt)
     if (!BaseApplication::frameRenderingQueued(evt))
         return false;
 
-    HWND winId = 0;
+    HWND winId = ::GetDesktopWindow();
     do {
         winId = FindWindowEx(NULL, winId, "Chrome_WidgetWin_1", NULL);
     } while (GetWindowTextLength(winId) == 0);
