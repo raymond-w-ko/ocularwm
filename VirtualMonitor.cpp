@@ -81,6 +81,12 @@ void VirtualMonitor::createObject()
 
 void VirtualMonitor::ChangeResolution(int width, int height)
 {
+    // enforce minimums or crash!
+    if (width == 0)
+        width = 1;
+    if (height == 0)
+        height = 1;
+
     if (mWidth == width && mHeight == height)
         return;
 

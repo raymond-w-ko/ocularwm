@@ -2,9 +2,9 @@
 #define DOT_SCENELOADER_H
 
 // Includes
-#include <Ogre/OgreString.h>
-#include <Ogre/OgreVector3.h>
-#include <Ogre/OgreQuaternion.h>
+#include <OgreString.h>
+#include <OgreVector3.h>
+#include <OgreQuaternion.h>
 #include <vector>
 
 // Forward declarations

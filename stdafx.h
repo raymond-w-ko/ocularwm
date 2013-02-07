@@ -14,24 +14,27 @@
 
 #include <windows.h>
 
-#include <OGRE/OgreRoot.h>
-#include <OGRE/OgreCamera.h>
-#include <OGRE/OgreCamera.h>
-#include <OGRE/OgreEntity.h>
-#include <OGRE/OgreLogManager.h>
-#include <OGRE/OgreRoot.h>
-#include <OGRE/OgreViewport.h>
-#include <OGRE/OgreSceneManager.h>
-#include <OGRE/OgreRenderWindow.h>
-#include <OGRE/OgreConfigFile.h>
-#include <OGRE/OgreResourceGroupManager.h>
+#include <OgreRoot.h>
+#include <OgreCamera.h>
+#include <OgreCamera.h>
+#include <OgreEntity.h>
+#include <OgreLogManager.h>
+#include <OgreRoot.h>
+#include <OgreViewport.h>
+#include <OgreSceneManager.h>
+#include <OgreRenderWindow.h>
+#include <OgreConfigFile.h>
+#include <OgreResourceGroupManager.h>
+#include <OgrePlugin.h>
+#include <OgreGLPlugin.h>
+#include <OgreOctreePlugin.h>
 
-#include <OIS/OISEvents.h>
-#include <OIS/OISInputManager.h>
-#include <OIS/OISKeyboard.h>
-#include <OIS/OISMouse.h>
+#include <OISEvents.h>
+#include <OISInputManager.h>
+#include <OISKeyboard.h>
+#include <OISMouse.h>
 
-#include <OGRE/SdkTrays.h>
-#include <OGRE/SdkCameraMan.h>
+#include <SdkTrays.h>
+#include <SdkCameraMan.h>
 
 #include "tinyxml.h"

@@ -55,14 +55,14 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>C:\boost;C:\ogre\build\sdk\include;tinyxml;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\boost;C:\ogre\build\sdk\include\OGRE;C:\ogre\build\sdk\include\OGRE\RenderSystems\GL;C:\ogre\build\sdk\include\OIS;C:\ogre\build\sdk\include\OGRE\Plugins\OctreeSceneManager;tinyxml;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>/Zm256 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>C:\boost\stage\lib64;C:\ogre\build\sdk\lib\debug;C:\ogre\build\sdk\lib\debug\opt;C:\ogre\build\sdk\lib\RelWithDebInfo;C:\ogre\build\sdk\lib\RelWithDebInfo\opt;C:\ogre\build\sdk\lib\release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>libboost_system-vc110-mt-gd-1_52.lib;OIS_d.lib;OgreMain_d.lib;OgrePaging_d.lib;OgreProperty_d.lib;OgreRTShaderSystem_d.lib;OgreTerrain_d.lib;Plugin_BSPSceneManager_d.lib;Plugin_CgProgramManager_d.lib;Plugin_OctreeSceneManager_d.lib;Plugin_OctreeZone_d.lib;Plugin_PCZSceneManager_d.lib;Plugin_ParticleFX_d.lib;RenderSystem_Direct3D9_d.lib;RenderSystem_GL_d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\boost\stage\lib64;C:\ogre\build\sdk\lib\debug;C:\ogre\build\sdk\lib\debug\opt;C:\ogre\build\sdk\lib\release;C:\ogre\build\sdk\lib\release\opt;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>dinput8.lib;dxguid.lib;opengl32.lib;glu32.lib;FreeImage_d.lib;OIS_d.lib;OgreMainStatic_d.lib;OgrePagingStatic_d.lib;OgrePropertyStatic_d.lib;OgreRTShaderSystemStatic_d.lib;OgreTerrainStatic_d.lib;freetype_d.lib;zlib_d.lib;zziplib_d.lib;Plugin_BSPSceneManagerStatic_d.lib;Plugin_CgProgramManagerStatic_d.lib;Plugin_OctreeSceneManagerStatic_d.lib;Plugin_OctreeZoneStatic_d.lib;Plugin_PCZSceneManagerStatic_d.lib;Plugin_ParticleFXStatic_d.lib;RenderSystem_Direct3D9Static_d.lib;RenderSystem_GLStatic_d.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>copy $(TargetPath) $(SolutionDir)\Deploy\OcularWM_d.exe</Command>
@@ -76,7 +76,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>C:\boost;C:\ogre\build\sdk\include;tinyxml;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\boost;C:\ogre\build\sdk\include\OGRE;C:\ogre\build\sdk\include\OGRE\RenderSystems\GL;C:\ogre\build\sdk\include\OIS;C:\ogre\build\sdk\include\OGRE\Plugins\OctreeSceneManager;tinyxml;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>/Zm256 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
@@ -84,8 +84,8 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>C:\boost\stage\lib64;C:\ogre\build\sdk\lib\debug;C:\ogre\build\sdk\lib\debug\opt;C:\ogre\build\sdk\lib\RelWithDebInfo\opt;C:\ogre\build\sdk\lib\RelWithDebInfo;C:\ogre\build\sdk\lib\release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>Plugin_BSPSceneManager.lib;Plugin_CgProgramManager.lib;Plugin_OctreeSceneManager.lib;Plugin_OctreeZone.lib;Plugin_PCZSceneManager.lib;Plugin_ParticleFX.lib;RenderSystem_Direct3D9.lib;RenderSystem_GL.lib;OgreMain.lib;OgrePaging.lib;OgreProperty.lib;OgreRTShaderSystem.lib;OgreTerrain.lib;OIS.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\boost\stage\lib64;C:\ogre\build\sdk\lib\debug;C:\ogre\build\sdk\lib\debug\opt;C:\ogre\build\sdk\lib\release;C:\ogre\build\sdk\lib\release\opt;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>dinput8.lib;dxguid.lib;opengl32.lib;glu32.lib;FreeImage.lib;OIS.lib;OgreMainStatic.lib;OgrePagingStatic.lib;OgrePropertyStatic.lib;OgreRTShaderSystemStatic.lib;OgreTerrainStatic.lib;cg.lib;freetype.lib;zlib.lib;zziplib.lib;Plugin_BSPSceneManagerStatic.lib;Plugin_CgProgramManagerStatic.lib;Plugin_OctreeSceneManagerStatic.lib;Plugin_OctreeZoneStatic.lib;Plugin_PCZSceneManagerStatic.lib;Plugin_ParticleFXStatic.lib;RenderSystem_Direct3D9Static.lib;RenderSystem_GLStatic.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>copy $(TargetPath) $(SolutionDir)\Deploy\OcularWM.exe</Command>
@@ -117,6 +117,9 @@
     <ClCompile Include="tinyxml\tinyxmlerror.cpp" />
     <ClCompile Include="tinyxml\tinyxmlparser.cpp" />
     <ClCompile Include="VirtualMonitor.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="..\..\..\..\..\ogre\build\OgreMain\OgreMain.dir\Debug\OgreWin32Resources.res" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

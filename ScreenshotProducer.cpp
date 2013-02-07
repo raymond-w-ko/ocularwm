@@ -44,7 +44,8 @@ ScreenshotProducer::ScreenshotProducer()
 void ScreenshotProducer::RequestAndWaitForExit()
 {
     mExitFlag.store(1);
-    mBackgroundThread.join();
+    if (mBackgroundThread.joinable())
+        mBackgroundThread.join();
 }
 
 void ScreenshotProducer::StartBackgroundLoop()

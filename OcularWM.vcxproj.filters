@@ -84,4 +84,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
+  <ItemGroup>
+    <Resource Include="..\..\..\..\..\ogre\build\OgreMain\OgreMain.dir\Debug\OgreWin32Resources.res">
+      <Filter>Resource Files</Filter>
+    </Resource>
+  </ItemGroup>
 </Project>

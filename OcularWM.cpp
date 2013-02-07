@@ -152,7 +152,7 @@ bool OcularWM::frameRenderingQueued(const Ogre::FrameEvent& evt)
 
     std::vector<HWND> hwnds = mScreenshotProducer.GetVisibleWindows();
     for (HWND hwnd : hwnds) {
-        ScreenshotPtr shot =mScreenshotProducer.Get(hwnd);
+        ScreenshotPtr shot = mScreenshotProducer.Get(hwnd);
         if (!shot)
             continue;
 

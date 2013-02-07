@@ -219,6 +219,9 @@ bool BaseApplication::setup(void)
 {
     mRoot = new Ogre::Root(mPluginsCfg);
 
+    Ogre::Root::getSingleton().installPlugin(new Ogre::GLPlugin());
+    Ogre::Root::getSingleton().installPlugin(new Ogre::OctreePlugin());
+
     setupResources();
 
     bool carryOn = configure();
