@@ -55,7 +55,7 @@ void ScreenshotProducer::StartBackgroundLoop()
 
 void ScreenshotProducer::loop()
 {
-    ::SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_LOWEST);
+    ::SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_IDLE);
 
     while (true) {
         if (mExitFlag.load() != 0)

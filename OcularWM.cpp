@@ -12,7 +12,7 @@ OcularWM::OcularWM() :
     mLog("OcularWM.log", ios_base::trunc),
     mIsBarrelWarpEnabled(false)
 {
-    ::SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_HIGHEST);
+    //::SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL);
 
     // my personal metrics
     mUserMetrics.SetHeightFromInches(68);
@@ -143,12 +143,19 @@ void OcularWM::createScene()
     //::MessageBox(nullptr, titles.c_str(), "", MB_OK);
 }
 
+void OcularWM::createFrameListener()
+{
+    mWindow->getCustomAttribute("WINDOW", &mHwnd);
+    ::SetWindowLongPtr(mHwnd, GWLP_WNDPROC, (LONG_PTR)&OcularWM::WindowProc);
+    ::SendMessage(mHwnd, WM_USER, (WPARAM)this, 0);
+}
+
 static int32 sScreenOffset = 0;
 
 bool OcularWM::frameRenderingQueued(const Ogre::FrameEvent& evt)
 {
-    if (!BaseApplication::frameRenderingQueued(evt))
-        return false;
+    //if (!BaseApplication::frameRenderingQueued(evt))
+        //return false;
 
     std::vector<HWND> hwnds = mScreenshotProducer.GetVisibleWindows();
     for (HWND hwnd : hwnds) {
@@ -176,3 +183,29 @@ bool OcularWM::frameRenderingQueued(const Ogre::FrameEvent& evt)
     return true;
 }
 
+
+LRESULT CALLBACK OcularWM::WindowProc(HWND hwnd,
+                                      UINT uMsg,
+                                      WPARAM wParam,
+                                      LPARAM lParam)
+{
+    static OcularWM* self = NULL;
+
+    switch (uMsg) {
+    case WM_USER: {
+        self = reinterpret_cast<OcularWM*>(wParam);
+    }
+    case WM_MOUSEMOVE: {
+        int x = GET_X_LPARAM(lParam);
+        int y = GET_Y_LPARAM(lParam);
+    }
+    case WM_CHAR: {
+        break;
+    }
+    default: {
+        return DefWindowProc(hwnd, uMsg, wParam, lParam);
+    }
+    }
+
+    return 0;
+}

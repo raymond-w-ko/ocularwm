@@ -13,6 +13,7 @@
 #include <boost/lexical_cast.hpp>
 
 #include <windows.h>
+#include <windowsx.h>
 
 #include <OgreRoot.h>
 #include <OgreCamera.h>

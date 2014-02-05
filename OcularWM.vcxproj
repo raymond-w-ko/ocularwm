@@ -72,12 +72,23 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <Optimization>MaxSpeed</Optimization>
+      <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>C:\boost;C:\ogre\build\sdk\include\OGRE;C:\ogre\build\sdk\include\OGRE\RenderSystems\GL;C:\ogre\build\sdk\include\OIS;C:\ogre\build\sdk\include\OGRE\Plugins\OctreeSceneManager;tinyxml;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>/Zm256 %(AdditionalOptions)</AdditionalOptions>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <OmitFramePointers>true</OmitFramePointers>
+      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
+      <StringPooling>true</StringPooling>
+      <StructMemberAlignment>16Bytes</StructMemberAlignment>
+      <BufferSecurityCheck>false</BufferSecurityCheck>
+      <EnableParallelCodeGeneration>true</EnableParallelCodeGeneration>
+      <EnableEnhancedInstructionSet>AdvancedVectorExtensions</EnableEnhancedInstructionSet>
+      <FloatingPointModel>Fast</FloatingPointModel>
+      <FloatingPointExceptions>false</FloatingPointExceptions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -86,6 +97,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalLibraryDirectories>C:\boost\stage\lib64;C:\ogre\build\sdk\lib\debug;C:\ogre\build\sdk\lib\debug\opt;C:\ogre\build\sdk\lib\release;C:\ogre\build\sdk\lib\release\opt;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>dinput8.lib;dxguid.lib;opengl32.lib;glu32.lib;FreeImage.lib;OIS.lib;OgreMainStatic.lib;OgrePagingStatic.lib;OgrePropertyStatic.lib;OgreRTShaderSystemStatic.lib;OgreTerrainStatic.lib;cg.lib;freetype.lib;zlib.lib;zziplib.lib;Plugin_BSPSceneManagerStatic.lib;Plugin_CgProgramManagerStatic.lib;Plugin_OctreeSceneManagerStatic.lib;Plugin_OctreeZoneStatic.lib;Plugin_PCZSceneManagerStatic.lib;Plugin_ParticleFXStatic.lib;RenderSystem_Direct3D9Static.lib;RenderSystem_GLStatic.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <LinkStatus>true</LinkStatus>
     </Link>
     <PostBuildEvent>
       <Command>copy $(TargetPath) $(SolutionDir)\Deploy\OcularWM.exe</Command>

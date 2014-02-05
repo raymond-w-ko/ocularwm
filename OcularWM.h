@@ -15,9 +15,17 @@ protected:
     virtual void createViewports();
 
     virtual void createScene();
+    virtual void createFrameListener();
 
     virtual bool frameRenderingQueued(const Ogre::FrameEvent& evt);
     virtual bool keyPressed( const OIS::KeyEvent &arg );
+
+    static LRESULT CALLBACK WindowProc(HWND hwnd,
+                                       UINT uMsg,
+                                       WPARAM wParam,
+                                       LPARAM lParam);
+
+    HWND mHwnd;
 
     UserMetrics mUserMetrics;
 
