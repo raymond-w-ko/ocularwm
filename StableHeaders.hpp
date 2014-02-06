@@ -21,6 +21,7 @@
 #include <OgreRoot.h>
 #include <OgreGLPlugin.h>
 #include <OgreRenderWindow.h>
+#include <OgreManualObject.h>
 
 #include <OVR.h>
 
