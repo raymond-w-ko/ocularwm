@@ -6,3 +6,8 @@
 *.opensdf
 *.sdf
 *.suo
+
+/projects/vs2013/Debug/
+/projects/vs2013/Release/
+/projects/vs2013/x64/
+/projects/vs2013/ipch/
