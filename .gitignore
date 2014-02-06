@@ -1,7 +1,7 @@
 /Build/
 /Deploy/*.dll
 /Deploy/*.exe
-/Deploy/*.log
+/Deploy/OgreLog.txt
 /ipch/
 *.opensdf
 *.sdf

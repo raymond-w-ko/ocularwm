@@ -7,6 +7,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\StableHeaders.hpp" />
-    <ClInclude Include="..\..\OcularWM.h" />
+    <ClInclude Include="..\..\OcularWM.hpp" />
   </ItemGroup>
 </Project>

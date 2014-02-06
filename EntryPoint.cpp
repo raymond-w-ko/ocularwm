@@ -1,5 +1,5 @@
 #include "StableHeaders.hpp"
-#include "OcularWM.h"
+#include "OcularWM.hpp"
 
 #ifdef __cplusplus
 extern "C"
@@ -8,14 +8,18 @@ int main(int argc, char *argv[]) {
   (void)argc;
   (void)argv;
 
-  OcularWM ocularWM;
-  ocularWM.Loop();
+  try {
+    OcularWM ocularWM;
+    ocularWM.Loop();
+  } catch (std::exception& e) {
+    Trace(e.what());
+  }
 
   return 0;
 }
 
-protected:
   /*
+protected:
   virtual void createCamera(void);
   virtual void createViewports();
 

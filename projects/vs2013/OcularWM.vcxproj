@@ -29,7 +29,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\OcularWM.h" />
+    <ClInclude Include="..\..\OcularWM.hpp" />
     <ClInclude Include="..\..\StableHeaders.hpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
@@ -98,9 +98,10 @@
       <WarningLevel>Level4</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>C:\opt\SDL2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\opt\SDL2\include;C:\opt\boost;C:\opt\ogre\build\sdk\include;C:\opt\ogre\build\sdk\include\OGRE;C:\opt\ogre\build\sdk\include\OGRE\RenderSystems\GL;C:\opt\ogre\build\sdk\include\OGRE\Plugins\OctreeSceneManager;C:\opt\ogre\build\sdk\include\OGRE\Plugins\ParticleFX;C:\opt\OculusSDK\LibOVR\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeaderFile>StableHeaders.hpp</PrecompiledHeaderFile>
       <BrowseInformation>true</BrowseInformation>
+      <AdditionalOptions>/Zm256 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -112,6 +113,9 @@
     <Bscmake>
       <PreserveSbr>true</PreserveSbr>
     </Bscmake>
+    <PostBuildEvent>
+      <Command>copy $(TargetPath) $(SolutionDir)..\..\Deploy\$(Configuration)</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -119,21 +123,26 @@
       <WarningLevel>Level4</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>C:\opt\SDL2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\opt\SDL2\include;C:\opt\boost;C:\opt\ogre\build\sdk\include;C:\opt\ogre\build\sdk\include\OGRE;C:\opt\ogre\build\sdk\include\OGRE\RenderSystems\GL;C:\opt\ogre\build\sdk\include\OGRE\Plugins\OctreeSceneManager;C:\opt\ogre\build\sdk\include\OGRE\Plugins\ParticleFX;C:\opt\OculusSDK\LibOVR\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeaderFile>StableHeaders.hpp</PrecompiledHeaderFile>
       <BrowseInformation>true</BrowseInformation>
+      <AdditionalOptions>/Zm256 %(AdditionalOptions)</AdditionalOptions>
+      <OmitFramePointers>false</OmitFramePointers>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EntryPointSymbol>
       </EntryPointSymbol>
-      <AdditionalLibraryDirectories>C:\opt\SDL2\lib\x64\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>SDL2.lib;SDL2main.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\opt\SDL2\lib\x64\$(Configuration);C:\opt\boost\stage\lib64;C:\opt\ogre\build\sdk\lib\$(Configuration);C:\opt\ogre\build\sdk\lib\$(Configuration)\opt;C:\opt\OculusSDK\LibOVR\Lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>SDL2.lib;SDL2main.lib;winmm.lib;opengl32.lib;glu32.lib;FreeImage_d.lib;OIS_d.lib;OgreMainStatic_d.lib;OgreOverlayStatic_d.lib;OgrePagingStatic_d.lib;OgrePropertyStatic_d.lib;OgreRTShaderSystemStatic_d.lib;OgreTerrainStatic_d.lib;OgreVolumeStatic_d.lib;cg.lib;freetype_d.lib;zlib_d.lib;zziplib_d.lib;Plugin_BSPSceneManagerStatic_d.lib;Plugin_CgProgramManagerStatic_d.lib;Plugin_OctreeSceneManagerStatic_d.lib;Plugin_OctreeZoneStatic_d.lib;Plugin_PCZSceneManagerStatic_d.lib;Plugin_ParticleFXStatic_d.lib;RenderSystem_Direct3D11Static_d.lib;RenderSystem_Direct3D9Static_d.lib;RenderSystem_GLStatic_d.lib;libovr64d.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <Bscmake>
       <PreserveSbr>true</PreserveSbr>
     </Bscmake>
+    <PostBuildEvent>
+      <Command>copy $(TargetPath) $(SolutionDir)..\..\Deploy\$(Configuration)</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -143,8 +152,9 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>C:\opt\SDL2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\opt\SDL2\include;C:\opt\boost;C:\opt\ogre\build\sdk\include;C:\opt\ogre\build\sdk\include\OGRE;C:\opt\ogre\build\sdk\include\OGRE\RenderSystems\GL;C:\opt\ogre\build\sdk\include\OGRE\Plugins\OctreeSceneManager;C:\opt\ogre\build\sdk\include\OGRE\Plugins\ParticleFX;C:\opt\OculusSDK\LibOVR\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeaderFile>StableHeaders.hpp</PrecompiledHeaderFile>
+      <AdditionalOptions>/Zm256 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -153,6 +163,9 @@
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
+    <PostBuildEvent>
+      <Command>copy $(TargetPath) $(SolutionDir)..\..\Deploy\$(Configuration)</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -162,17 +175,29 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>C:\opt\SDL2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\opt\SDL2\include;C:\opt\boost;C:\opt\ogre\build\sdk\include;C:\opt\ogre\build\sdk\include\OGRE;C:\opt\ogre\build\sdk\include\OGRE\RenderSystems\GL;C:\opt\ogre\build\sdk\include\OGRE\Plugins\OctreeSceneManager;C:\opt\ogre\build\sdk\include\OGRE\Plugins\ParticleFX;C:\opt\OculusSDK\LibOVR\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeaderFile>StableHeaders.hpp</PrecompiledHeaderFile>
+      <AdditionalOptions>/Zm256 %(AdditionalOptions)</AdditionalOptions>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <OmitFramePointers>true</OmitFramePointers>
+      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
+      <StringPooling>true</StringPooling>
+      <BufferSecurityCheck>false</BufferSecurityCheck>
+      <EnableParallelCodeGeneration>true</EnableParallelCodeGeneration>
+      <FloatingPointModel>Fast</FloatingPointModel>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>C:\opt\SDL2\lib\x64\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>SDL2.lib;SDL2main.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\opt\SDL2\lib\x64\$(Configuration);C:\opt\boost\stage\lib64;C:\opt\ogre\build\sdk\lib\$(Configuration);C:\opt\ogre\build\sdk\lib\$(Configuration)\opt;C:\opt\OculusSDK\LibOVR\Lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>SDL2.lib;SDL2main.lib;winmm.lib;opengl32.lib;glu32.lib;FreeImage.lib;OIS.lib;OgreMainStatic.lib;OgreOverlayStatic.lib;OgrePagingStatic.lib;OgrePropertyStatic.lib;OgreRTShaderSystemStatic.lib;OgreTerrainStatic.lib;OgreVolumeStatic.lib;cg.lib;freetype.lib;zlib.lib;zziplib.lib;Plugin_BSPSceneManagerStatic.lib;Plugin_CgProgramManagerStatic.lib;Plugin_OctreeSceneManagerStatic.lib;Plugin_OctreeZoneStatic.lib;Plugin_PCZSceneManagerStatic.lib;Plugin_ParticleFXStatic.lib;RenderSystem_Direct3D11Static.lib;RenderSystem_Direct3D9Static.lib;RenderSystem_GLStatic.lib;libovr64.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command>copy $(TargetPath) $(SolutionDir)..\..\Deploy\$(Configuration)</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
