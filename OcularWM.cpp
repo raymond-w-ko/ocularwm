@@ -4,6 +4,19 @@
 // https://github.com/scrawl/ogre-sdl2-test/blob/master/source/main.cpp
 
 OcularWM::~OcularWM() {
+  // WTFLOL, how do I destructor?
+  // if you don't call this, then SDK deadlocks with threads waiting for each
+  // other. apparently their smart pointer implementation is very tricky and
+  // doesn't actually properly destroy objects when they go out of scope!
+  mOVR->Sensor.Clear();
+  mOVR->HMD.Clear();
+  mOVR->DeviceManager.Clear();
+  delete mOVR->SensorFusion;
+  mOVR->SensorFusion = NULL;
+  delete mOVR;
+  mOVR = NULL;
+  OVR::System::Destroy();
+
   delete mOgreRoot;
   mOgreRoot = nullptr;
 
@@ -108,8 +121,15 @@ void OcularWM::setupSDL() {
 }
 
 void OcularWM::Loop() {
+  typedef boost::chrono::high_resolution_clock clock;
+
+  // total amount of time (in seconds) to complete one frame
+  double frame_time = 0.0;
+  // total amount of time (in seconds) to just do the rendering
+  double render_time = 0.0;
+
   for (;;) {
-    mOgreRoot->renderOneFrame();
+    clock::time_point frame_begin_time = clock::now();
 
     SDL_Event event;
     if (!SDL_PollEvent(&event)) {
@@ -123,6 +143,23 @@ void OcularWM::Loop() {
         // pass
         break;
     }
+
+    syncOrientationFromHMD(render_time);
+
+    clock::time_point render_begin_time = clock::now();
+    mOgreRoot->renderOneFrame();
+
+    clock::time_point end_time = clock::now();
+
+    boost::chrono::nanoseconds ns;
+
+    ns = end_time - render_begin_time;
+    render_time = static_cast<double>(ns.count());
+    render_time /= 1e9;
+
+    ns = end_time - frame_begin_time;
+    frame_time = static_cast<double>(ns.count());
+    frame_time /= 1e9;
   }
 OcularWM_Loop_quit:
   return;
@@ -132,12 +169,19 @@ void OcularWM::setupOgre() {
   mOgreRoot = new Ogre::Root("", "", "OgreLog.txt");
   Ogre::Root* root = mOgreRoot;
 
+  root->installPlugin(new Ogre::OctreePlugin);
+
   root->installPlugin(new Ogre::GLPlugin);
   root->setRenderSystem(
       root->getRenderSystemByName("OpenGL Rendering Subsystem"));
 
   root->initialise(false);
 
+  setupOgreWindow();
+  setupOgreVR();
+}
+
+void OcularWM::setupOgreWindow() {
   struct SDL_SysWMinfo wm_info;
   SDL_VERSION(&wm_info.version);
 
@@ -175,43 +219,78 @@ void OcularWM::setupOgre() {
       false,
       &params);
   mOgreWindow->setVisible(true);
+}
 
-  mScene = root->createSceneManager(Ogre::ST_GENERIC);
-  Ogre::Camera* camera = mScene->createCamera("cam");
-  Ogre::Viewport* vp = mOgreWindow->addViewport(camera);
-  vp->setBackgroundColour(Ogre::ColourValue(0, 1, 0, 1));
+void OcularWM::setupOgreVR() {
+  mScene = mOgreRoot->createSceneManager(Ogre::ST_GENERIC);
+  Ogre::Camera* camera;
 
-  	Ogre::ManualObject* manual = mScene->createManualObject();
+  camera = mScene->createCamera("VR_Left_Eye");
+  mCameras.push_back(camera);
+  camera = mScene->createCamera("VR_Right_Eye");
+  mCameras.push_back(camera);
+  camera = mScene->createCamera("VR_Center_Eye");
+  mCameras.push_back(camera);
 
-    // Use identity view/projection matrices to get a 2d quad
-    manual->setUseIdentityProjection(true);
-    manual->setUseIdentityView(true);
+  for (auto cam : mCameras) {
+    cam->setOrientation(Ogre::Quaternion::IDENTITY);
+  }
 
-    Ogre::MaterialPtr material = Ogre::MaterialManager::getSingleton().create("mat", Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
-    material->getTechnique(0)->getPass(0)->setLightingEnabled(false);
-    manual->begin(material->getName());
+  mRootNode = mScene->getRootSceneNode();
+  mCameraNode = mRootNode->createChildSceneNode("Main_Camera_Node");
 
-    manual->position(-1, -1, 0.0);
-    manual->textureCoord(0, 1);
-    manual->colour(Ogre::ColourValue(1,0,0,1));
+  mEyesNode = mCameraNode->createChildSceneNode("VR_Eyes_Node");
+  mEyesNode->setInheritOrientation(false);
+  mEyesNode->attachObject(mCameras[0]);
+  mEyesNode->attachObject(mCameras[1]);
+  mEyesNode->attachObject(mCameras[2]);
 
-    manual->position(1, -1, 0.0);
-    manual->textureCoord(1, 1);
-    manual->colour(Ogre::ColourValue(1,1,0,1));
+  // TODO: account for near far plane distances once SDK has support for this
+  Ogre::Matrix4 m;
 
-    manual->position(1, 1, 0.0);
-    manual->textureCoord(1, 0);
-    manual->colour(Ogre::ColourValue(1,1,1,1));
+  const OVR::Matrix4f& left_proj = mOVR->StereoConfig.GetEyeRenderParams(
+      OVR::Util::Render::StereoEye_Left).Projection;
+  if (sizeof(*m[0]) != sizeof(left_proj.M[0][0])) {
+    throw OcularWMException("matrix member size mismatch");
+  }
+  Convert(m, left_proj);
+  mCameras[kLeft]->setCustomProjectionMatrix(true, m);
 
-    manual->position(-1, 1, 0.0);
-    manual->textureCoord(0, 0);
-    manual->colour(Ogre::ColourValue(1,0,1,1));
+  const OVR::Matrix4f& right_proj = mOVR->StereoConfig.GetEyeRenderParams(
+      OVR::Util::Render::StereoEye_Right).Projection;
+  Convert(m, right_proj);
+  mCameras[kRight]->setCustomProjectionMatrix(true, m);
+}
 
-    manual->quad(0,1,2,3);
+void OcularWM::syncOrientationFromHMD(double render_time) {
+  OVR::Quatf q = mOVR->SensorFusion->GetPredictedOrientation(
+      static_cast<float>(render_time));
+  Ogre::Quaternion orientation(q.w, q.x, q.y, q.z);
+  mEyesNode->setOrientation(orientation);
 
-    manual->end();
+  //mCameras[kCenter]->updateView();
+  // line below assumes the above is called internally; we can't do so
+  // ourselve since the method is protected protected.
+  mCameras[kCenter]->getDerivedOrientation();
 
-    manual->setBoundingBox(Ogre::AxisAlignedBox::BOX_INFINITE);
+  Ogre::Matrix4 m;
+  Ogre::Matrix4 center_view = mCameras[kCenter]->getViewMatrix();
 
-    mScene->getRootSceneNode()->createChildSceneNode()->attachObject(manual);
+  // TODO: make sure eye offset has been converted to world scale
+  // if we assume 1 world unit == 1 meter, then we don't have to anything
+  float world_unit_scale = 1.0f;
+
+  const OVR::Matrix4f& left_adjust = mOVR->StereoConfig.GetEyeRenderParams(
+      OVR::Util::Render::StereoEye_Left).ViewAdjust;
+  Convert(m, left_adjust);
+  m[0][3] *= world_unit_scale;
+  m = m * center_view;
+  mCameras[kLeft]->setCustomViewMatrix(true, m);
+
+  const OVR::Matrix4f& right_adjust = mOVR->StereoConfig.GetEyeRenderParams(
+      OVR::Util::Render::StereoEye_Right).ViewAdjust;
+  Convert(m, right_adjust);
+  m[0][3] *= world_unit_scale;
+  mCameras[kRight]->setCustomViewMatrix(true, m);
+
 }
