@@ -19,12 +19,14 @@
 
 // custom C++
 #include <boost/chrono.hpp>
+#include <boost/filesystem.hpp>
 
 #include <OgreRoot.h>
 #include <OgreOctreePlugin.h>
 #include <OgreGLPlugin.h>
 #include <OgreRenderWindow.h>
 #include <OgreManualObject.h>
+#include <OgreHardwarePixelBuffer.h>
 
 #include <OVR.h>
 

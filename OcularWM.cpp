@@ -17,11 +17,11 @@ OcularWM::~OcularWM() {
   mOVR = NULL;
   OVR::System::Destroy();
 
-  delete mOgreRoot;
-  mOgreRoot = nullptr;
-
   SDL_DestroyWindow(mWindow);
   SDL_Quit();
+
+  //delete mOgreRoot;
+  //mOgreRoot = nullptr;
 }
 
 OcularWM::OcularWM()
@@ -131,19 +131,9 @@ void OcularWM::Loop() {
   for (;;) {
     clock::time_point frame_begin_time = clock::now();
 
-    SDL_Event event;
-    if (!SDL_PollEvent(&event)) {
-      continue;
+    if (!processSdlInput()) {
+      break;
     }
-
-    switch (event.type) {
-      case SDL_QUIT:
-        goto OcularWM_Loop_quit;
-      default:
-        // pass
-        break;
-    }
-
     syncOrientationFromHMD(render_time);
 
     clock::time_point render_begin_time = clock::now();
@@ -161,8 +151,6 @@ void OcularWM::Loop() {
     frame_time = static_cast<double>(ns.count());
     frame_time /= 1e9;
   }
-OcularWM_Loop_quit:
-  return;
 }
 
 void OcularWM::setupOgre() {
@@ -178,7 +166,10 @@ void OcularWM::setupOgre() {
   root->initialise(false);
 
   setupOgreWindow();
-  setupOgreVR();
+  setupOgreMedia();
+  setupOgreVRRender();
+  setupOgreVRCameras();
+  setupScene();
 }
 
 void OcularWM::setupOgreWindow() {
@@ -213,16 +204,252 @@ void OcularWM::setupOgreWindow() {
   params.insert(std::make_pair("top", "0"));
 
   const auto& hmd = mOVR->StereoConfig.GetHMDInfo();
-  mOgreWindow = Ogre::Root::getSingleton().createRenderWindow(
+  mRenderWindow = Ogre::Root::getSingleton().createRenderWindow(
       "OcularWM",
       hmd.HResolution, hmd.VResolution,
       false,
       &params);
-  mOgreWindow->setVisible(true);
+  mRenderWindow->setVisible(true);
 }
 
-void OcularWM::setupOgreVR() {
-  mScene = mOgreRoot->createSceneManager(Ogre::ST_GENERIC);
+bool OcularWM::processSdlInput() {
+  SDL_Event event;
+  if (!SDL_PollEvent(&event)) {
+    return true;
+  }
+
+  switch (event.type) {
+    case SDL_QUIT:
+      return false;
+    default:
+      // pass
+      break;
+  }
+
+  return true;
+}
+
+void OcularWM::syncOrientationFromHMD(double render_time) {
+  OVR::Quatf q = mOVR->SensorFusion->GetPredictedOrientation(
+      static_cast<float>(render_time));
+  Ogre::Quaternion orientation(q.w, q.x, q.y, q.z);
+  mEyesNode->setOrientation(orientation);
+
+  //mCameras[kCenter]->updateView();
+  // line below assumes the above is called internally; we can't do so
+  // ourselve since the method is protected protected.
+  mCameras[kCenter]->getDerivedOrientation();
+
+  Ogre::Matrix4 m;
+  Ogre::Matrix4 center_view = mCameras[kCenter]->getViewMatrix();
+
+  // TODO: make sure eye offset has been converted to world scale
+  // if we assume 1 world unit == 1 meter, then we don't have to anything
+  float world_unit_scale = 1.0f;
+
+  const OVR::Matrix4f& left_adjust = mOVR->StereoConfig.GetEyeRenderParams(
+      OVR::Util::Render::StereoEye_Left).ViewAdjust;
+  Convert(m, left_adjust);
+  m[0][3] *= world_unit_scale;
+  m = m * center_view;
+  mCameras[kLeft]->setCustomViewMatrix(true, m);
+
+  const OVR::Matrix4f& right_adjust = mOVR->StereoConfig.GetEyeRenderParams(
+      OVR::Util::Render::StereoEye_Right).ViewAdjust;
+  Convert(m, right_adjust);
+  m[0][3] *= world_unit_scale;
+  m = m * center_view;
+  mCameras[kRight]->setCustomViewMatrix(true, m);
+}
+
+void OcularWM::setupOgreMedia() {
+  Ogre::ResourceGroupManager& man = Ogre::ResourceGroupManager::getSingleton();
+
+  // root level stuff
+  man.addResourceLocation(
+      "media",
+      "FileSystem",
+      Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME,
+      false);
+
+  using namespace boost::filesystem;
+
+  // some ZIP packs
+  auto end = directory_iterator();
+  for (auto iter = directory_iterator("media/packs"); iter != end; ++iter) {
+    const path& item = iter->path();
+    if (!is_regular_file(item))
+      continue;
+
+    man.addResourceLocation(
+        item.generic_string(),
+        "Zip",
+        Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME,
+        false);
+  }
+
+  // not safe to do this before RenderWindow exists
+  man.initialiseAllResourceGroups();
+}
+
+void OcularWM::setupOgreVRRender() {
+  const auto& hmd = mOVR->StereoConfig.GetHMDInfo();
+
+  float scale = mOVR->StereoConfig.GetDistortionScale();
+  unsigned width = (unsigned)(hmd.HResolution * scale);
+  unsigned height = (unsigned)(hmd.VResolution * scale);
+
+  const int num_mipmaps = 0;
+  const bool hw_gamma_correct = false;
+  const unsigned aa = 4;
+  mRenderTexture = Ogre::TextureManager::getSingleton().createManual(
+      "VR_Render_Target",
+      Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME,
+      Ogre::TEX_TYPE_2D,
+      width, height,
+      num_mipmaps,
+      Ogre::PF_R8G8B8,
+      Ogre::TU_RENDERTARGET,
+      NULL,
+      hw_gamma_correct,
+      aa);
+  mRenderTarget = mRenderTexture->getBuffer()->getRenderTarget();
+
+  Ogre::MaterialManager& material_man = Ogre::MaterialManager::getSingleton();
+  Ogre::Pass* pass = NULL;
+  Ogre::TextureUnitState* tus = NULL;
+
+  std::string mat_name = "OcularWM/BarrelChromaAberrFix";
+  Ogre::MaterialPtr base_material = material_man.getByName(mat_name);
+
+  pass = base_material->getTechnique(0)->getPass(0);
+  tus = pass->getTextureUnitState(0);
+  tus->setTextureName("VR_Render_Target");
+
+  std::string left_mat_name = mat_name + "_L";
+  Ogre::MaterialPtr left_mat = base_material->clone(left_mat_name);
+  configureMaterial(kLeft, left_mat);
+
+  std::string right_mat_name = mat_name + "_R";
+  Ogre::MaterialPtr right_mat = base_material->clone(right_mat_name);
+  configureMaterial(kRight, right_mat);
+
+  Ogre::AxisAlignedBox box;
+  box.setInfinite();
+
+  const bool include_tex_coord = true;
+  Ogre::Rectangle2D* left_rect = new Ogre::Rectangle2D(include_tex_coord);
+  left_rect->setBoundingBox(box);
+  left_rect->setCorners(-1.0f, 1.0f, 0.0f, -1.0f);
+  left_rect->setUVs(
+      Ogre::Vector2(0.0f, 0.0f),
+      Ogre::Vector2(0.0f, 1.0f),
+      Ogre::Vector2(0.5f, 0.0f),
+      Ogre::Vector2(0.5f, 1.0f));
+  left_rect->setMaterial(left_mat_name);
+
+  Ogre::Rectangle2D* right_rect = new Ogre::Rectangle2D(include_tex_coord);
+  right_rect->setBoundingBox(box);
+  right_rect->setCorners(0.0f, 1.0f, 1.0f, -1.0f);
+  right_rect->setUVs(
+      Ogre::Vector2(0.5f, 0.0f),
+      Ogre::Vector2(0.5f, 1.0f),
+      Ogre::Vector2(1.0f, 0.0f),
+      Ogre::Vector2(1.0f, 1.0f));
+  right_rect->setMaterial(right_mat_name);
+
+  mDummyScene = mOgreRoot->createSceneManager(Ogre::ST_GENERIC, "VR");
+  Ogre::SceneNode* root = mDummyScene->getRootSceneNode();
+  Ogre::SceneNode* node = root->createChildSceneNode("Background");
+  node->attachObject(left_rect);
+  node->attachObject(right_rect);
+
+  Ogre::Camera* camera = mDummyScene->createCamera("Camera0");
+  node->attachObject(camera);
+  Ogre::Viewport* vp = mRenderWindow->addViewport(
+      camera, 0,
+      0.0f, 0.0f, 1.0f, 1.0f);
+  vp->setAutoUpdated(true);
+}
+
+void OcularWM::configureMaterial(HmdEye hmd_eye, Ogre::MaterialPtr mat) {
+  OVR::Util::Render::StereoEye ovr_eye;
+
+  if (hmd_eye == kLeft) {
+    ovr_eye = OVR::Util::Render::StereoEye_Left;
+  } else if (hmd_eye == kRight) {
+    ovr_eye = OVR::Util::Render::StereoEye_Right;
+  } else {
+    throw OcularWMException("invalid eye specified");
+  }
+
+  const auto& hmd = mOVR->StereoConfig.GetHMDInfo();
+
+  float w = 0.5f;
+  float h = 1.0f;
+  float x;
+  if (hmd_eye == kLeft) {
+    x = 0.0f;
+  } else /*if (hmd_eye == kRight)*/ {
+    x = 0.5f;
+  }
+  float y = 0.0f;
+
+  float as = (float)hmd.HResolution * 0.5f / hmd.VResolution;
+
+  const OVR::Util::Render::StereoEyeParams& params =
+      mOVR->StereoConfig.GetEyeRenderParams(ovr_eye);
+
+  float LensCenter[2];
+  float ScreenCenter[2];
+  float Scale[2];
+  float ScaleIn[2];
+  float HmdWarpParam[4];
+  float ChromAbParam[4];
+
+  // WTF: I should not have to do this
+  // WTF2: Oculus also does this in their TinyRoom demo
+  float flip = 1.0;
+  if (hmd_eye == kRight) {
+    flip = -1.0f;
+  }
+  LensCenter[0] = x + (w + flip * params.pDistortion->XCenterOffset * 0.5f) * 0.5f;
+  LensCenter[1] = y + h * 0.5f;
+
+  ScreenCenter[0] = x + w * 0.5f;
+  ScreenCenter[1] = y + h * 0.5f;
+
+  float scaleFactor = 1.0f / params.pDistortion->Scale;
+
+  Scale[0] = (w / 2) * scaleFactor;
+  Scale[1] = (h / 2) * scaleFactor * as;
+
+  ScaleIn[0] = 2 / w;
+  ScaleIn[1] = (2/h) / as;
+
+  for (int i = 0; i < 4; ++i) {
+    HmdWarpParam[i] = params.pDistortion->K[i];
+  }
+
+  for (int i = 0; i < 4; ++i) {
+    ChromAbParam[i] = params.pDistortion->ChromaticAberration[i];
+  }
+
+  Ogre::Pass* pass = mat->getTechnique(0)->getPass(0);
+  Ogre::GpuProgramParametersSharedPtr frag =
+      pass->getFragmentProgramParameters();
+  frag->setNamedConstant("LensCenter", Ogre::Vector2(LensCenter));
+  frag->setNamedConstant("ScreenCenter", Ogre::Vector2(ScreenCenter));
+  frag->setNamedConstant("Scale", Ogre::Vector2(Scale));
+  frag->setNamedConstant("ScaleIn", Ogre::Vector2(ScaleIn));
+  frag->setNamedConstant("HmdWarpParam", Ogre::Vector4(HmdWarpParam));
+  if (mat->getName().find("ChromaAberr") != std::string::npos) {
+    frag->setNamedConstant("ChromAbParam", Ogre::Vector4(ChromAbParam));
+  }
+}
+
+void OcularWM::setupOgreVRCameras() {
+  mScene = mOgreRoot->createSceneManager(Ogre::ST_GENERIC, "Primary");
   Ogre::Camera* camera;
 
   camera = mScene->createCamera("VR_Left_Eye");
@@ -260,37 +487,21 @@ void OcularWM::setupOgreVR() {
       OVR::Util::Render::StereoEye_Right).Projection;
   Convert(m, right_proj);
   mCameras[kRight]->setCustomProjectionMatrix(true, m);
+
+  mLeftViewport = mRenderTarget->addViewport(
+      mCameras[kLeft], 0,
+      0.0f, 0.0f, 0.5f, 1.0f);
+  mRightViewport = mRenderTarget->addViewport(
+      mCameras[kRight], 1,
+      0.5f, 0.0f, 0.5f, 1.0f);
+
+  mLeftViewport->setBackgroundColour(Ogre::ColourValue(1, 0, 0, 1));
+  mLeftViewport->setAutoUpdated(true);
+  mRightViewport->setBackgroundColour(Ogre::ColourValue(0, 0, 1, 1));
+  mRightViewport->setAutoUpdated(true);
 }
 
-void OcularWM::syncOrientationFromHMD(double render_time) {
-  OVR::Quatf q = mOVR->SensorFusion->GetPredictedOrientation(
-      static_cast<float>(render_time));
-  Ogre::Quaternion orientation(q.w, q.x, q.y, q.z);
-  mEyesNode->setOrientation(orientation);
-
-  //mCameras[kCenter]->updateView();
-  // line below assumes the above is called internally; we can't do so
-  // ourselve since the method is protected protected.
-  mCameras[kCenter]->getDerivedOrientation();
-
-  Ogre::Matrix4 m;
-  Ogre::Matrix4 center_view = mCameras[kCenter]->getViewMatrix();
-
-  // TODO: make sure eye offset has been converted to world scale
-  // if we assume 1 world unit == 1 meter, then we don't have to anything
-  float world_unit_scale = 1.0f;
-
-  const OVR::Matrix4f& left_adjust = mOVR->StereoConfig.GetEyeRenderParams(
-      OVR::Util::Render::StereoEye_Left).ViewAdjust;
-  Convert(m, left_adjust);
-  m[0][3] *= world_unit_scale;
-  m = m * center_view;
-  mCameras[kLeft]->setCustomViewMatrix(true, m);
-
-  const OVR::Matrix4f& right_adjust = mOVR->StereoConfig.GetEyeRenderParams(
-      OVR::Util::Render::StereoEye_Right).ViewAdjust;
-  Convert(m, right_adjust);
-  m[0][3] *= world_unit_scale;
-  mCameras[kRight]->setCustomViewMatrix(true, m);
-
+void OcularWM::setupScene() {
+  mScene->setSkyBox(true, "Examples/CloudyNoonSkyBox", 1000);
+  mDummyScene->setSkyBox(true, "Examples/CloudyNoonSkyBox", 1000);
 }

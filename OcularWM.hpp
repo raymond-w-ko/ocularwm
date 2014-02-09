@@ -51,17 +51,26 @@ class OcularWM {
 
   void setupOgre();
   void setupOgreWindow();
-  void setupOgreVR();
+  void setupOgreMedia();
+  void setupOgreVRRender();
+  void configureMaterial(HmdEye hmd_eye, Ogre::MaterialPtr mat);
+  void setupOgreVRCameras();
+  void setupScene();
 
+  bool processSdlInput();
   void syncOrientationFromHMD(double frame_time);
 
   SDL_Window* mWindow;
   OculusVars* mOVR;
 
-  Ogre::RenderWindow* mOgreWindow;
+  Ogre::RenderWindow* mRenderWindow;
   Ogre::Root* mOgreRoot;
   Ogre::SceneManager* mScene;
   Ogre::SceneNode* mRootNode;
+
+  Ogre::TexturePtr mRenderTexture;
+  Ogre::RenderTarget* mRenderTarget;
+  Ogre::SceneManager* mDummyScene;
 
   std::vector<Ogre::Camera*> mCameras;
   // for position, and possible any scripted animation, or being the main
@@ -69,6 +78,8 @@ class OcularWM {
   Ogre::SceneNode* mCameraNode;
   // for syncing orientation with HMD, ignore orientation inheritance
   Ogre::SceneNode* mEyesNode;
+  Ogre::Viewport* mLeftViewport;
+  Ogre::Viewport* mRightViewport;
 
   bool mUseMainMonitorInstead;
 };
