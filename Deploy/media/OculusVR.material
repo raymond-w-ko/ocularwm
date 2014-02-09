@@ -1,30 +1,36 @@
-vertex_program OcularWM/StdQuadVP glsl {
-	source StdQuad_vp.glsl
-    entry_point main
+vertex_program OcularWM/StdQuad glsl {
+  source StdQuad.vert.glsl
+  entry_point main
 }
 
-fragment_program OcularWM/BarrelWarp glsl {
-    source BarrelWarp.glsl
-    entry_point main
+fragment_program OcularWM/BarrelChromaAberrFix glsl {
+  source BarrelChromaAberrFix.frag.glsl
+  entry_point main
 }
 
-material OcularWM/Compositor/BarrelWarp {
-    technique {
-        pass {
-			depth_check off
+material OcularWM/BarrelChromaAberrFix {
+  technique { pass {
+    depth_check off
+    depth_write off
+    lighting off
 
-            vertex_program_ref OcularWM/StdQuadVP {
-            }
-
-            fragment_program_ref OcularWM/BarrelWarp {
-            }
-
-			texture_unit RT {
-				tex_coord_set 0
-				tex_address_mode clamp
-				filtering linear linear linear
-                tex_address_mode border border
-			}
-        }
+    vertex_program_ref OcularWM/StdQuad {
     }
+    fragment_program_ref OcularWM/BarrelChromaAberrFix {
+      param_named Texture0 int 0
+
+      param_named LensCenter float2 0 0
+      param_named ScreenCenter float2 0 0
+      param_named Scale float2 0 0
+      param_named ScaleIn float2 0 0
+      param_named HmdWarpParam float4 0 0 0 0
+      param_named ChromAbParam float4 0 0 0 0
+    }
+
+    texture_unit 0 {
+      texture dummy.bmp
+      filtering linear linear linear
+      tex_address_mode clamp
+    }
+  } }
 }

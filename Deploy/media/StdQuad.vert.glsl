@@ -1,11 +1,9 @@
-varying vec2 uv;
+attribute vec4 vertex;
+attribute vec4 uv0;
 
-void main()                    
-{
-	gl_Position = ftransform();
-	
-	vec2 inPos = sign(gl_Vertex.xy);
-	
-	uv = (vec2(inPos.x, -inPos.y) + 1.0)/2.0;
+varying vec2 oUV;
+
+void main() {
+	gl_Position = vertex;
+	oUV = uv0.xy;
 }
-
