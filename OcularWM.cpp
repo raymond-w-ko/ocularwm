@@ -20,13 +20,13 @@ OcularWM::~OcularWM() {
   SDL_DestroyWindow(mWindow);
   SDL_Quit();
 
-  //delete mOgreRoot;
-  //mOgreRoot = nullptr;
+  delete mOgreRoot;
+  mOgreRoot = nullptr;
 }
 
 OcularWM::OcularWM()
     : mOVR(nullptr),
-      mUseMainMonitorInstead(true) {
+      mUseMainMonitorInstead(false) {
   changeToAssetDirectory();
   setupOVR();
   setupSDL();
@@ -504,4 +504,18 @@ void OcularWM::setupOgreVRCameras() {
 void OcularWM::setupScene() {
   mScene->setSkyBox(true, "Examples/CloudyNoonSkyBox", 1000);
   mDummyScene->setSkyBox(true, "Examples/CloudyNoonSkyBox", 1000);
+
+  Ogre::SceneNode* node = mRootNode->createChildSceneNode();
+  Ogre::Entity* cube = mScene->createEntity("cube0", Ogre::SceneManager::PT_CUBE);
+
+  node->attachObject(cube);
+
+  float width = 0.5694f * 0.01f;
+  float height = 0.3404f * 0.01f;
+  float thickness = 0.001f * 0.01f;
+
+  node->setScale(width, height, thickness);
+  node->setPosition(0, 0, -0.5694f);
+  cube->setMaterialName("Examples/StormySkyBox");
+  node->showBoundingBox(true);
 }

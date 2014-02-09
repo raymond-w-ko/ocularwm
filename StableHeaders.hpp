@@ -27,6 +27,7 @@
 #include <OgreRenderWindow.h>
 #include <OgreManualObject.h>
 #include <OgreHardwarePixelBuffer.h>
+#include <OgreEntity.h>
 
 #include <OVR.h>
 
