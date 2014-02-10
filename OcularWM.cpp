@@ -4,6 +4,8 @@
 // https://github.com/scrawl/ogre-sdl2-test/blob/master/source/main.cpp
 
 OcularWM::~OcularWM() {
+  mScreenshotProducer.Stop();
+
   // WTFLOL, how do I destructor?
   // if you don't call this, then SDK deadlocks with threads waiting for each
   // other. apparently their smart pointer implementation is very tricky and
@@ -31,6 +33,8 @@ OcularWM::OcularWM()
   setupOVR();
   setupSDL();
   setupOgre();
+
+  mScreenshotProducer.Start();
 }
 
 void OcularWM::changeToAssetDirectory() {

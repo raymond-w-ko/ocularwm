@@ -9,5 +9,6 @@
   <ItemGroup>
     <ClInclude Include="..\..\StableHeaders.hpp" />
     <ClInclude Include="..\..\OcularWM.hpp" />
+    <ClInclude Include="..\..\ScreenshotProducer.hpp" />
   </ItemGroup>
 </Project>

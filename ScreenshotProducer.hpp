@@ -1,16 +1,13 @@
 #pragma once
 
-struct Screenshot {
-  Screenshot();
+struct Screenshot : public boost::noncopyable {
+  Screenshot(HWND hwnd, int width, int height);
   ~Screenshot();
 
-  // assumes mWidth and mHeight are properly set
-  void AllocateSpaceForPixels();
-
   const static int msPixelSize;
-  HWND mHwnd;
-  int mWidth;
-  int mHeight;
+  const HWND mHwnd;
+  const int mWidth;
+  const int mHeight;
   Ogre::uint8* mPixels;
 };
 typedef std::shared_ptr<Screenshot> ScreenshotPtr;
@@ -41,14 +38,17 @@ public:
   ScreenshotPtr Get(HWND hwnd);
 
   // call from background thread only
-  static BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lParam);
   void Start();
-  void CaptureScreenshot(HWND hwnd, ScreenshotPtr shot);
+  ScreenshotPtr CaptureScreenshot(HWND hwnd);
 
   std::vector<HWND> GetVisibleWindows();
 
 protected:
   void loop();
+  static BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lParam) {
+    return ((ScreenshotProducer*)lParam)->enumWindowsProc(hwnd);
+  }
+  BOOL enumWindowsProc(HWND hwnd);
 
   std::thread mBackgroundThread;
   std::atomic<int> mExitFlag;
@@ -56,5 +56,5 @@ protected:
   std::mutex mVisibleWindowsLock;
 
   std::vector<HWND> mVisibleWindows;
-  std::unordered_map<HWND, std::shared_ptr<Screenshot>> mScreenshots;
+  std::unordered_map<HWND, ScreenshotPtr> mScreenshots;
 };

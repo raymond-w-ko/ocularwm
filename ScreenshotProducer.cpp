@@ -1,5 +1,5 @@
 #include "StableHeaders.hpp"
-#include "ScreenshotProducer.h"
+#include "ScreenshotProducer.hpp"
 
 using namespace std;
 using namespace boost;
@@ -7,11 +7,13 @@ using namespace Ogre;
 
 const int Screenshot::msPixelSize = 4;
 
-Screenshot::Screenshot()
+Screenshot::Screenshot(HWND hwnd, int width, int height)
     : mPixels(nullptr),
-      mWidth(-1),
-      mHeight(-1),
-      mHwnd(0) {
+      mHwnd(hwnd),
+      mWidth(width),
+      mHeight(height) {
+  size_t bytes = mWidth * msPixelSize * mHeight;
+  mPixels = new unsigned char[bytes];
 }
 
 Screenshot::~Screenshot() {
@@ -21,11 +23,6 @@ Screenshot::~Screenshot() {
   }
 }
 
-void Screenshot::AllocateSpaceForPixels() {
-  size_t count = mWidth * msPixelSize * mHeight;
-  mPixels = new unsigned char[count];
-}
-
 ///////////////////////////////////////////////////////////////////////////////
 
 ScreenshotProducer::~ScreenshotProducer() {
@@ -33,13 +30,6 @@ ScreenshotProducer::~ScreenshotProducer() {
 
 ScreenshotProducer::ScreenshotProducer() {
   mExitFlag.store(0);
-}
-
-void ScreenshotProducer::Stop() {
-  mExitFlag.store(1);
-  if (mBackgroundThread.joinable()) {
-    mBackgroundThread.join();
-  }
 }
 
 void ScreenshotProducer::Start() {
@@ -52,24 +42,30 @@ void ScreenshotProducer::Start() {
   mBackgroundThread = std::thread(&ScreenshotProducer::loop, this);
 }
 
+void ScreenshotProducer::Stop() {
+  mExitFlag.store(1);
+  if (mBackgroundThread.joinable()) {
+    mBackgroundThread.join();
+  }
+}
+
 void ScreenshotProducer::loop() {
-  ::SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_IDLE);
+  SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_IDLE);
 
   for (;;) {
+    // check if Stop() is called
     if (mExitFlag.load() != 0)
       break;
 
-    // update list of HWNDs to take a screenshot
+    // update list of windows for taking a screenshot
     mVisibleWindowsLock.lock();
     mVisibleWindows.clear();
+    ::EnumWindows(ScreenshotProducer::EnumWindowsProc, (LPARAM)this);
     mVisibleWindowsLock.unlock();
-    ::EnumWindows(ScreenshotProducer::EnumWindowsProc,
-                    reinterpret_cast<LPARAM>(this));
 
-    // iterate over the list of HWNDs and take a screenshot for each of then
-    // iff they already don't have a valid screenshot
-    mVisibleWindowsLock.lock();
-    for (HWND hwnd : mVisibleWindows) {
+    // iterate over the list of windows and take a screenshot for each of then
+    // if they already don't have a valid screenshot
+    for (const HWND& hwnd : mVisibleWindows) {
       mLock.lock();
       if (mScreenshots[hwnd]) {
         mLock.unlock();
@@ -77,60 +73,50 @@ void ScreenshotProducer::loop() {
       }
       mLock.unlock();
 
-      ScreenshotPtr shot = make_shared<Screenshot>();
-      CaptureScreenshot(hwnd, shot);
+      ScreenshotPtr screenshot = CaptureScreenshot(hwnd);
 
       mLock.lock();
-      mScreenshots[hwnd] = shot;
+      mScreenshots[hwnd] = screenshot;
       mLock.unlock();
     }
-    mVisibleWindowsLock.unlock();
   }
 }
 
-BOOL CALLBACK ScreenshotProducer::EnumWindowsProc(HWND hwnd, LPARAM lParam)
-{
+BOOL ScreenshotProducer::enumWindowsProc(HWND hwnd) {
+  // don't capture screenshot if window is not visible
   if (!::IsWindowVisible(hwnd))
     return TRUE;
 
-  ScreenshotProducer* self = reinterpret_cast<ScreenshotProducer*>(lParam);
+  // maximum length according to WNDCLASSEX structure is 256, maybe need NULL
+  // byte?
+  char szClass[257];
+  ::GetClassName(hwnd, szClass, sizeof(szClass));
+  string win_class(szClass);
 
-  // maximum length according to WNDCLASSEX structure is 256, maybe need NULL byte?
-  /*
-     char szClass[257];
-     ::GetClassName(hwnd, szClass, sizeof(szClass));
-     string winClass(szClass);
+  char szTitle[1024];
+  GetWindowText(hwnd , szTitle, sizeof(szTitle));
+  string win_title(szTitle);
 
-     char szTitle[1024];
-     ::GetWindowText(hwnd , szTitle, sizeof(szTitle));
-     string title(szTitle);
+  if (win_title == "OcularWM") {
+    return TRUE;
+  }
 
-     if (szTitle == "OcularWM" || szTitle == "OcularWM_d")
-     return TRUE;
-     */
-
-  self->mVisibleWindowsLock.lock();
-  self->mVisibleWindows.push_back(hwnd);
-  self->mVisibleWindowsLock.unlock();
+  mVisibleWindows.push_back(hwnd);
 
   return TRUE;
 }
 
 // http://stackoverflow.com/questions/1149271/how-to-correctly-screencapture-a-specific-window-on-aero-dwm
-void ScreenshotProducer::CaptureScreenshot(HWND winId, ScreenshotPtr shot)
-{
+ScreenshotPtr ScreenshotProducer::CaptureScreenshot(HWND hwnd) {
   const int x = 0;
   const int y = 0;
 
   RECT r;
-  GetWindowRect(winId, &r);
+  GetWindowRect(hwnd, &r);
   int w = r.right - r.left;
   int h = r.bottom - r.top;
 
-  shot->mHwnd = winId;
-  shot->mWidth = w;
-  shot->mHeight = h;
-  shot->AllocateSpaceForPixels();
+  ScreenshotPtr screenshot = make_shared<Screenshot>(hwnd, w, h);
 
   // Create and setup bitmap
   HDC display_dc = GetDC(0);
@@ -139,11 +125,11 @@ void ScreenshotProducer::CaptureScreenshot(HWND winId, ScreenshotPtr shot)
   HGDIOBJ null_bitmap = SelectObject(bitmap_dc, bitmap);
 
   // copy data
-  HDC window_dc = GetWindowDC(winId);
+  HDC window_dc = GetWindowDC(hwnd);
   BitBlt(bitmap_dc, 0, 0, w, h, window_dc, x, y, SRCCOPY);
 
   // clean up all but bitmap
-  ReleaseDC(winId, window_dc);
+  ReleaseDC(hwnd, window_dc);
   SelectObject(bitmap_dc, null_bitmap);
   DeleteDC(bitmap_dc);
 
@@ -155,10 +141,13 @@ void ScreenshotProducer::CaptureScreenshot(HWND winId, ScreenshotPtr shot)
   info.bmiHeader.biBitCount = 32;
   info.bmiHeader.biCompression = BI_RGB;
 
-  GetDIBits(display_dc, bitmap, 0, h, shot->mPixels, &info, DIB_RGB_COLORS);
+  Ogre::uint8* pixels = screenshot->mPixels;
+  GetDIBits(display_dc, bitmap, 0, h, pixels, &info, DIB_RGB_COLORS);
 
   DeleteObject(bitmap);
   ReleaseDC(0, display_dc);
+
+  return screenshot;
 }
 
 ScreenshotPtr ScreenshotProducer::ConsumeRandom()
@@ -170,7 +159,8 @@ ScreenshotPtr ScreenshotProducer::ConsumeRandom()
       continue;
 
     shot = iter->second;
-    mScreenshots[iter->first].reset();
+    HWND hwnd = iter->first;
+    mScreenshots.erase(hwnd);
     break;
   }
   mLock.unlock();
@@ -183,7 +173,7 @@ ScreenshotPtr ScreenshotProducer::Get(HWND hwnd)
 
   mLock.lock();
   shot = mScreenshots[hwnd];
-  mScreenshots[hwnd].reset();
+  mScreenshots.erase(hwnd);
   mLock.unlock();
 
   return shot;
@@ -191,9 +181,7 @@ ScreenshotPtr ScreenshotProducer::Get(HWND hwnd)
 
 std::vector<HWND> ScreenshotProducer::GetVisibleWindows()
 {
-  if (!mVisibleWindowsLock.try_lock())
-    return std::vector<HWND>();
-
+  mVisibleWindowsLock.lock();
   std::vector<HWND> copy = mVisibleWindows;
   mVisibleWindowsLock.unlock();
   return copy;
