@@ -11,15 +11,19 @@
 #include <SDL_syswm.h>
 
 // standard C++
+#include <atomic>
 #include <cstdio>
 #include <cstdlib>
-
 #include <exception>
+#include <memory>
+#include <mutex>
 #include <string>
+#include <thread>
 
 // custom C++
 #include <boost/chrono.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/utility.hpp>
 
 #include <OgreRoot.h>
 #include <OgreOctreePlugin.h>

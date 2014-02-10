@@ -1,5 +1,7 @@
 #pragma once
 
+#include "ScreenshotProducer.hpp"
+
 struct OcularWMException : public std::exception {
   OcularWMException(std::string desc) : mDescription(desc) { }
 
@@ -31,7 +33,7 @@ class OculusVars {
   }
 };
 
-class OcularWM {
+class OcularWM : public boost::noncopyable {
  public:
   enum HmdEye {
     kLeft = 0,
@@ -81,5 +83,7 @@ class OcularWM {
   Ogre::Viewport* mLeftViewport;
   Ogre::Viewport* mRightViewport;
 
-  bool mUseMainMonitorInstead;
+  const bool mUseMainMonitorInstead;
+
+  ScreenshotProducer mScreenshotProducer;
 };

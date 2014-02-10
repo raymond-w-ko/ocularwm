@@ -26,7 +26,7 @@ OcularWM::~OcularWM() {
 
 OcularWM::OcularWM()
     : mOVR(nullptr),
-      mUseMainMonitorInstead(false) {
+      mUseMainMonitorInstead(true) {
   changeToAssetDirectory();
   setupOVR();
   setupSDL();
