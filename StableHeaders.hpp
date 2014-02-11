@@ -23,6 +23,7 @@
 // custom C++
 #include <boost/chrono.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/lexical_cast.hpp>
 #include <boost/utility.hpp>
 
 #include <OgreRoot.h>

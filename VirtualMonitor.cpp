@@ -1,5 +1,5 @@
-#include "stdafx.h"
-#include "VirtualMonitor.h"
+#include "StableHeaders.hpp"
+#include "VirtualMonitor.hpp"
 
 using namespace std;
 using namespace boost;

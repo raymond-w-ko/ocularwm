@@ -5,10 +5,12 @@
     <ClCompile Include="..\..\EntryPoint.cpp" />
     <ClCompile Include="..\..\OcularWM.cpp" />
     <ClCompile Include="..\..\ScreenshotProducer.cpp" />
+    <ClCompile Include="..\..\VirtualMonitor.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\StableHeaders.hpp" />
     <ClInclude Include="..\..\OcularWM.hpp" />
     <ClInclude Include="..\..\ScreenshotProducer.hpp" />
+    <ClInclude Include="..\..\VirtualMonitor.hpp" />
   </ItemGroup>
 </Project>
