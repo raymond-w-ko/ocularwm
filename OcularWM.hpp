@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ScreenshotProducer.hpp"
+#include "VirtualMonitorManager.hpp"
 
 struct OcularWMException : public std::exception {
   OcularWMException(std::string desc) : mDescription(desc) { }
@@ -86,4 +87,5 @@ class OcularWM : public boost::noncopyable {
   const bool mUseMainMonitorInstead;
 
   ScreenshotProducer mScreenshotProducer;
+  VirtualMonitorManagerPtr mVirtualMonitorManager;
 };

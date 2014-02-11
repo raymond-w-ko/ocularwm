@@ -6,11 +6,13 @@
     <ClCompile Include="..\..\OcularWM.cpp" />
     <ClCompile Include="..\..\ScreenshotProducer.cpp" />
     <ClCompile Include="..\..\VirtualMonitor.cpp" />
+    <ClCompile Include="..\..\VirtualMonitorManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\StableHeaders.hpp" />
     <ClInclude Include="..\..\OcularWM.hpp" />
     <ClInclude Include="..\..\ScreenshotProducer.hpp" />
     <ClInclude Include="..\..\VirtualMonitor.hpp" />
+    <ClInclude Include="..\..\VirtualMonitorManager.hpp" />
   </ItemGroup>
 </Project>

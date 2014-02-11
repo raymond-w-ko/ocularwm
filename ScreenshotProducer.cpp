@@ -28,7 +28,8 @@ Screenshot::~Screenshot() {
 ScreenshotProducer::~ScreenshotProducer() {
 }
 
-ScreenshotProducer::ScreenshotProducer() {
+ScreenshotProducer::ScreenshotProducer() 
+    : mParentHwnd(0) {
   mExitFlag.store(0);
 }
 
@@ -83,6 +84,12 @@ void ScreenshotProducer::loop() {
 }
 
 BOOL ScreenshotProducer::enumWindowsProc(HWND hwnd) {
+  // This can cause deadlocks as the mVisibleWindowsLock is locked here and
+  // the main thread, and the WindowsProc in SDL didn't have a chacne to run
+  // yet.
+  if (mParentHwnd == hwnd)
+    return TRUE;
+
   // don't capture screenshot if window is not visible
   if (!::IsWindowVisible(hwnd))
     return TRUE;

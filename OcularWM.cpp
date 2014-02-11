@@ -35,6 +35,8 @@ OcularWM::OcularWM()
   setupOgre();
 
   mScreenshotProducer.Start();
+  mVirtualMonitorManager = std::make_shared<VirtualMonitorManager>(
+      &mScreenshotProducer, mScene);
 }
 
 void OcularWM::changeToAssetDirectory() {
@@ -135,6 +137,8 @@ void OcularWM::Loop() {
   for (;;) {
     clock::time_point frame_begin_time = clock::now();
 
+    mVirtualMonitorManager->Update();
+
     if (!processSdlInput()) {
       break;
     }
@@ -184,6 +188,7 @@ void OcularWM::setupOgreWindow() {
     throw OcularWMSetupException("could not get WM info from SDL");
   }
 
+  HWND myHwnd = 0;
   Ogre::String win_handle;
   switch (wm_info.subsystem) {
     //case SDL_SYSWM_X11:
@@ -191,13 +196,14 @@ void OcularWM::setupOgreWindow() {
           //(unsigned long)wm_info.info.x11.window);
       //break;
     case SDL_SYSWM_WINDOWS:
-      win_handle = Ogre::StringConverter::toString(
-          (unsigned long)wm_info.info.win.window);
+      myHwnd = wm_info.info.win.window;
+      win_handle = Ogre::StringConverter::toString((unsigned long)myHwnd);
       break;
     default:
       throw OcularWMSetupException("unknown WM!");
       break;
   }
+  mScreenshotProducer.SetParentHwnd(myHwnd);
 
   Ogre::NameValuePairList params;
   params.insert(std::make_pair("title", "OcularWM"));

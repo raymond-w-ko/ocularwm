@@ -43,6 +43,8 @@ public:
 
   std::vector<HWND> GetVisibleWindows();
 
+  void SetParentHwnd(HWND hwnd) { mParentHwnd = hwnd; }
+
 protected:
   void loop();
   static BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lParam) {
@@ -57,4 +59,6 @@ protected:
 
   std::vector<HWND> mVisibleWindows;
   std::unordered_map<HWND, ScreenshotPtr> mScreenshots;
+
+  HWND mParentHwnd;
 };
