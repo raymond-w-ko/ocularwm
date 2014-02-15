@@ -11,12 +11,13 @@ class VirtualMonitorManager {
       Ogre::SceneManager* scene);
   ~VirtualMonitorManager();
 
-  void Update();
+  void Update(float frame_time);
 
  private:
   ScreenshotProducer* mScreenshotProducer;
   Ogre::SceneManager* mScene;
 
   std::unordered_map<HWND, VirtualMonitorPtr> mRootMonitors;
+  std::unordered_map<HWND, VirtualMonitorPtr> mChildMonitors;
 };
 typedef std::shared_ptr<VirtualMonitorManager> VirtualMonitorManagerPtr;

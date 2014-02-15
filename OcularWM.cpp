@@ -5,6 +5,7 @@
 
 OcularWM::~OcularWM() {
   mScreenshotProducer.Stop();
+  mVirtualMonitorManager.reset();
 
   // WTFLOL, how do I destructor?
   // if you don't call this, then SDK deadlocks with threads waiting for each
@@ -137,7 +138,7 @@ void OcularWM::Loop() {
   for (;;) {
     clock::time_point frame_begin_time = clock::now();
 
-    mVirtualMonitorManager->Update();
+    mVirtualMonitorManager->Update(frame_time);
 
     if (!processSdlInput()) {
       break;
@@ -515,6 +516,7 @@ void OcularWM::setupScene() {
   mScene->setSkyBox(true, "Examples/CloudyNoonSkyBox", 1000);
   mDummyScene->setSkyBox(true, "Examples/CloudyNoonSkyBox", 1000);
 
+  /*
   Ogre::SceneNode* node = mRootNode->createChildSceneNode();
   Ogre::Entity* cube = mScene->createEntity("cube0", Ogre::SceneManager::PT_CUBE);
 
@@ -525,7 +527,8 @@ void OcularWM::setupScene() {
   float thickness = 0.001f * 0.01f;
 
   node->setScale(width, height, thickness);
-  node->setPosition(0, 0, -0.5694f);
+  node->setPosition(0.5, 0.5, -0.5694f);
   cube->setMaterialName("Examples/StormySkyBox");
   node->showBoundingBox(true);
+  */
 }

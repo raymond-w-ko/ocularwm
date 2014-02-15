@@ -12,21 +12,6 @@ struct Screenshot : public boost::noncopyable {
 };
 typedef std::shared_ptr<Screenshot> ScreenshotPtr;
 
-struct WindowInfo {
-  HWND hwnd;
-  std::string mClassName;
-  std::string mTitle;
-};
-
-namespace std {
-  template <>
-  struct hash<WindowInfo> : public unary_function<WindowInfo, size_t> {
-    size_t operator()(const WindowInfo& v) const {
-      return std::hash<HWND>()(v.hwnd);
-    }
-  };
-}
-
 class ScreenshotProducer {
 public:
   ScreenshotProducer();

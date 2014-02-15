@@ -1,5 +1,6 @@
 #pragma once
 
+#include "ScreenshotProducer.hpp"
 class VirtualMonitor {
 public:
     struct Pixel {
@@ -9,19 +10,21 @@ public:
         unsigned char a;
     };
 
-    static std::shared_ptr<VirtualMonitor> Create(
-        Ogre::SceneManager* sceneMgr,
-        std::string name,
-        int width, int height);
+    VirtualMonitor(Ogre::SceneManager* scene, HWND hwnd);
     ~VirtualMonitor();
 
+    // update monitor with a given screenshot
+    void Blit(ScreenshotPtr screenshot);
+
+    /*
     Pixel& GetPixel(void* pixels,
                     size_t x, size_t y)
     {
         return *reinterpret_cast<VirtualMonitor::Pixel*>(
             &(static_cast<Ogre::uint8*>(pixels))
-            [(y * mWidth * mPixelSize) + (x * mPixelSize)]);
+            [(y * mWidth * msPixelSize) + (x * mPixelSize)]);
     }
+    */
 
     void ChangeResolution(int width, int height);
     void Blank(Ogre::ColourValue colour);
@@ -29,40 +32,36 @@ public:
     const Ogre::PixelBox& Lock();
     void Unlock();
 
-    void SetScale(float scale);
+    void SetMonitorWidth(float scale);
     void SetPosition(float x, float y, float z);
     void UpdateScale();
 
     void WritePixels(Ogre::uint8* src);
 
+    void FocusAtUser();
+
 protected:
-    VirtualMonitor(
-        Ogre::SceneManager* sceneMgr,
-        std::string name,
-        int width, int height);
-
-    void createMaterial();
-    void createObject();
-
     static unsigned int msResourceCounter;
+    static int msPixelSize;
 
-    std::string mName;
+protected:
+    void createObject();
+    void createMaterial();
 
-    int mPixelSize;
+    Ogre::SceneManager* mScene;
+    HWND mHwnd;
+    unsigned mID;
+
+    Ogre::ManualObject* mScreen;
+    Ogre::SceneNode* mNode;
+    Ogre::MaterialPtr mMaterial;
+    Ogre::Pass* mPass;
+
     int mWidth;
     int mHeight;
     float mAspectRatio;
-    float mUserScale;
+    float mMonitorWidth;
 
     Ogre::TexturePtr mTexture;
-    Ogre::HardwarePixelBufferSharedPtr mPixelBuffer;
-    Ogre::MaterialPtr mMaterial;
-    /// managed by Ogre::SceneManager, no need to be a smart pointer
-    Ogre::ManualObject* mManualObject;
-    /// managed by Ogre::SceneManager, no need to be a smart pointer
-    Ogre::SceneNode* mSceneNode;
-
-    /// outside our scope
-    Ogre::SceneManager* mSceneMgr;
 };
 typedef std::shared_ptr<VirtualMonitor> VirtualMonitorPtr;
