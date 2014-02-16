@@ -36,6 +36,10 @@
 
 #include <OVR.h>
 
+#ifdef _WIN32
+typedef HWND WindowID;
+#endif
+
 static inline void Trace(std::string msg) {
 #ifdef _WIN32
   OutputDebugStringA(msg.c_str());
@@ -45,3 +49,5 @@ static inline void Trace(std::string msg) {
 static inline void Convert(Ogre::Matrix4& dst, const OVR::Matrix4f src) {
   ::memcpy(dst[0], src.M, 16 * sizeof(src.M[0][0]));
 }
+
+#include "ScopedStopwatch.hpp"

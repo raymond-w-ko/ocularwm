@@ -1,8 +1,19 @@
 #include "StableHeaders.hpp"
 #include "OcularWM.hpp"
 
-// https://github.com/scrawl/ogre-sdl2-test/blob/master/source/main.cpp
+static void CALLBACK WinEventProc(
+    HWINEVENTHOOK hWinEventHook,
+    DWORD         event,
+    HWND          hwnd,
+    LONG          idObject,
+    LONG          idChild,
+    DWORD         idEventThread,
+    DWORD         dwmsEventTime) {
+  if (event == EVENT_OBJECT_DESTROY && idObject == OBJID_WINDOW) {
+  }
+}
 
+// https://github.com/scrawl/ogre-sdl2-test/blob/master/source/main.cpp
 OcularWM::~OcularWM() {
   mScreenshotProducer.Stop();
   mVirtualMonitorManager.reset();
@@ -38,6 +49,11 @@ OcularWM::OcularWM()
   mScreenshotProducer.Start();
   mVirtualMonitorManager = std::make_shared<VirtualMonitorManager>(
       &mScreenshotProducer, mScene);
+
+  SetWinEventHook(
+      EVENT_OBJECT_DESTROY, EVENT_OBJECT_DESTROY, NULL,
+      WinEventProc, 0, 0,
+      WINEVENT_SKIPOWNPROCESS | WINEVENT_SKIPOWNPROCESS);
 }
 
 void OcularWM::changeToAssetDirectory() {
@@ -103,19 +119,14 @@ void OcularWM::setupSDL() {
   SDL_Init(SDL_INIT_VIDEO);
 
   const auto& hmd = mOVR->StereoConfig.GetHMDInfo();
-  int x = SDL_WINDOWPOS_UNDEFINED;
-  int y = SDL_WINDOWPOS_UNDEFINED;
+  int x = 0;
+  int y = 0;
   if (!mUseMainMonitorInstead) {
     x = hmd.DesktopX;
     y = hmd.DesktopY;
   }
 
-  Uint32 window_flags = SDL_WINDOW_SHOWN;
-  if (!mUseMainMonitorInstead) {
-    window_flags |= SDL_WINDOW_BORDERLESS;
-  } else {
-    ;
-  }
+  Uint32 window_flags = SDL_WINDOW_SHOWN | SDL_WINDOW_BORDERLESS;
 
   mWindow = SDL_CreateWindow(
       "OcularWM",
@@ -130,35 +141,46 @@ void OcularWM::setupSDL() {
 void OcularWM::Loop() {
   typedef boost::chrono::high_resolution_clock clock;
 
-  // total amount of time (in seconds) to complete one frame
-  double frame_time = 0.0;
+  // total amount of time (in seconds) to just blit to screens
+  double blit_time = 0.0;
+  // total amount of time (in seconds) to process input
+  double input_time = 0.0;
   // total amount of time (in seconds) to just do the rendering
   double render_time = 0.0;
+  // total amount of time (in seconds) to complete one frame
+  double frame_time = 0.0;
 
+  boost::chrono::nanoseconds ns;
   for (;;) {
     clock::time_point frame_begin_time = clock::now();
 
     mVirtualMonitorManager->Update(frame_time);
+    ns = clock::now() - frame_begin_time;
+    blit_time = static_cast<double>(ns.count()) / 1e9;
 
+    clock::time_point input_begin_time = clock::now();
     if (!processSdlInput()) {
       break;
     }
     syncOrientationFromHMD(render_time);
+    ns = clock::now() - input_begin_time;
+    input_time = static_cast<double>(ns.count()) / 1e9;
 
     clock::time_point render_begin_time = clock::now();
     mOgreRoot->renderOneFrame();
 
     clock::time_point end_time = clock::now();
 
-    boost::chrono::nanoseconds ns;
-
     ns = end_time - render_begin_time;
-    render_time = static_cast<double>(ns.count());
-    render_time /= 1e9;
+    render_time = static_cast<double>(ns.count()) / 1e9;
 
     ns = end_time - frame_begin_time;
-    frame_time = static_cast<double>(ns.count());
-    frame_time /= 1e9;
+    frame_time = static_cast<double>(ns.count()) / 1e9;
+
+    char buffer[4096];
+    sprintf(buffer, "blit: %f, input: %f, render: %f, frame:%f, FPS: %f\n",
+            blit_time, input_time, render_time, frame_time, 1.0 / frame_time);
+    Trace(buffer);
   }
 }
 
@@ -189,7 +211,7 @@ void OcularWM::setupOgreWindow() {
     throw OcularWMSetupException("could not get WM info from SDL");
   }
 
-  HWND myHwnd = 0;
+  WindowID myHwnd = 0;
   Ogre::String win_handle;
   switch (wm_info.subsystem) {
     //case SDL_SYSWM_X11:

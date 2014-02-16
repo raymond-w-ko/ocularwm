@@ -10,21 +10,14 @@ public:
         unsigned char a;
     };
 
-    VirtualMonitor(Ogre::SceneManager* scene, HWND hwnd);
+    static const Ogre::PixelFormat msBestPixelFormat;
+
+public:
+    VirtualMonitor(Ogre::SceneManager* scene, WindowID hwnd);
     ~VirtualMonitor();
 
     // update monitor with a given screenshot
     void Blit(ScreenshotPtr screenshot);
-
-    /*
-    Pixel& GetPixel(void* pixels,
-                    size_t x, size_t y)
-    {
-        return *reinterpret_cast<VirtualMonitor::Pixel*>(
-            &(static_cast<Ogre::uint8*>(pixels))
-            [(y * mWidth * msPixelSize) + (x * mPixelSize)]);
-    }
-    */
 
     void ChangeResolution(int width, int height);
     void Blank(Ogre::ColourValue colour);
@@ -49,7 +42,7 @@ protected:
     void createMaterial();
 
     Ogre::SceneManager* mScene;
-    HWND mHwnd;
+    WindowID mHwnd;
     unsigned mID;
 
     Ogre::ManualObject* mScreen;

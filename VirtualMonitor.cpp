@@ -7,6 +7,9 @@ using namespace Ogre;
 
 unsigned int VirtualMonitor::msResourceCounter = 0;
 int VirtualMonitor::msPixelSize = 4;
+// DON'T CHANGE THIS or massive slowdowns and suttering occurs because of
+// internal pixel swapping
+const PixelFormat VirtualMonitor::msBestPixelFormat = PF_B8G8R8A8;
 
 VirtualMonitor::~VirtualMonitor() {
   if (mTexture.get()) {
@@ -16,7 +19,7 @@ VirtualMonitor::~VirtualMonitor() {
   }
 }
 
-VirtualMonitor::VirtualMonitor(SceneManager* scene, HWND hwnd)
+VirtualMonitor::VirtualMonitor(SceneManager* scene, WindowID hwnd)
     : mScene(scene),
       mHwnd(hwnd),
       mWidth(-1),
@@ -87,12 +90,20 @@ void VirtualMonitor::Blit(ScreenshotPtr screenshot) {
     return;
   }
 
+  int width, height;
+  Ogre::uint8* pixels;
+  screenshot->Lock(&pixels, &width, &height);
+  if (!pixels) {
+    screenshot->Unlock();
+    return;
+  }
+
   bool need_texture_recreate = false;
-  if (mWidth != screenshot->mWidth || mHeight != screenshot->mHeight || mTexture.isNull()) {
+  if (mWidth != width || mHeight != height || mTexture.isNull()) {
     need_texture_recreate = true;
   }
-  mWidth = screenshot->mWidth;
-  mHeight = screenshot->mHeight;
+  mWidth = width;
+  mHeight = height;
   mAspectRatio = static_cast<float>(mWidth) / static_cast<float>(mHeight);
 
   if (need_texture_recreate) {
@@ -109,16 +120,16 @@ void VirtualMonitor::Blit(ScreenshotPtr screenshot) {
         TEX_TYPE_2D,
         mWidth, mHeight,
         0, // TODO: do mipmaps visually improve this / even work well with frequent updates
-        PF_BYTE_BGRA,
+        msBestPixelFormat,
         TU_DYNAMIC_WRITE_ONLY_DISCARDABLE);
     mPass->getTextureUnitState(0)->setTextureName(texture_name);
   }
 
   HardwarePixelBufferSharedPtr buffer = mTexture->getBuffer();
-  buffer->lock(HardwareBuffer::HBL_DISCARD);
-  const PixelBox& box = buffer->getCurrentLock();
-  memcpy(box.data, screenshot->mPixels, mWidth * mHeight * msPixelSize);
-  buffer->unlock();
+  PixelBox box(width, height, 1, msBestPixelFormat, pixels);
+  buffer->blitFromMemory(box);
+  
+  screenshot->Unlock();
 }
 
 void VirtualMonitor::FocusAtUser() {

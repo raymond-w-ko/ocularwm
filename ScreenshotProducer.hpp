@@ -1,14 +1,29 @@
 #pragma once
 
-struct Screenshot : public boost::noncopyable {
-  Screenshot(HWND hwnd, int width, int height);
+// So what I've learned from experimentation, is that we have to allocate a
+// constant Screenshot for each WindowID, otherwise the destructor for can take
+// quite a while to run.
+
+class Screenshot : public boost::noncopyable {
+ public:
+  Screenshot(WindowID hwnd);
   ~Screenshot();
 
+  void EnsurePixelsAllocated(int width, int height);
+  void Lock(Ogre::uint8** pixels, int* width, int* height);
+  void Unlock();
+
+ protected:
   const static int msPixelSize;
-  const HWND mHwnd;
-  const int mWidth;
-  const int mHeight;
+
+ protected:
+  const WindowID mHwnd;
+
+  int mWidth;
+  int mHeight;
   Ogre::uint8* mPixels;
+
+  std::mutex mLock;
 };
 typedef std::shared_ptr<Screenshot> ScreenshotPtr;
 
@@ -18,32 +33,31 @@ public:
   ~ScreenshotProducer();
 
   // call from primary thread only
-  void Stop();
-  ScreenshotPtr ConsumeRandom();
-  ScreenshotPtr Get(HWND hwnd);
-
-  // call from background thread only
   void Start();
-  ScreenshotPtr CaptureScreenshot(HWND hwnd);
+  void Stop();
 
-  std::vector<HWND> GetVisibleWindows();
+  ScreenshotPtr Get(WindowID hwnd);
+  std::vector<WindowID> GetVisibleWindows();
 
-  void SetParentHwnd(HWND hwnd) { mParentHwnd = hwnd; }
+  void SetParentHwnd(WindowID hwnd) { mParentHwnd = hwnd; }
 
 protected:
+  // background thread only
   void loop();
-  static BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lParam) {
+  void captureScreenshot(WindowID hwnd, ScreenshotPtr screenshot);
+
+  static BOOL CALLBACK EnumWindowsProc(WindowID hwnd, LPARAM lParam) {
     return ((ScreenshotProducer*)lParam)->enumWindowsProc(hwnd);
   }
-  BOOL enumWindowsProc(HWND hwnd);
+  BOOL enumWindowsProc(WindowID hwnd);
 
   std::thread mBackgroundThread;
   std::atomic<int> mExitFlag;
-  std::mutex mLock;
+  std::mutex mMapLock;
   std::mutex mVisibleWindowsLock;
 
-  std::vector<HWND> mVisibleWindows;
-  std::unordered_map<HWND, ScreenshotPtr> mScreenshots;
+  std::vector<WindowID> mVisibleWindows;
+  std::unordered_map<WindowID, ScreenshotPtr> mScreenshots;
 
-  HWND mParentHwnd;
+  WindowID mParentHwnd;
 };
