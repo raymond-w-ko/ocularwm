@@ -6,7 +6,7 @@ uniform vec2 ScaleIn;
 uniform vec4 HmdWarpParam;
 uniform vec4 ChromAbParam;
 varying vec2 oUV;
-void main ()
+void main()
 {
   vec4 oFragColour_1;
   vec4 color_2;
