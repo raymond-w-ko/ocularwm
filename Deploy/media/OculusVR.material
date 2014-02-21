@@ -1,9 +1,9 @@
-vertex_program OcularWM/StdQuad glsl {
+vertex_program StdQuad.vert glsl {
   source StdQuad.vert.glsl
   entry_point main
 }
 
-fragment_program OcularWM/BarrelChromaAberrFix glsl {
+fragment_program BarrelChromaAberrFix.frag glsl {
   source BarrelChromaAberrFix.frag.glsl
   entry_point main
 }
@@ -14,9 +14,9 @@ material OcularWM/BarrelChromaAberrFix {
     depth_write off
     lighting off
 
-    vertex_program_ref OcularWM/StdQuad {
+    vertex_program_ref StdQuad.vert {
     }
-    fragment_program_ref OcularWM/BarrelChromaAberrFix {
+    fragment_program_ref BarrelChromaAberrFix.frag {
       param_named Texture0 int 0
 
       param_named LensCenter float2 0 0
@@ -33,4 +33,22 @@ material OcularWM/BarrelChromaAberrFix {
       tex_address_mode clamp
     }
   } }
+}
+
+material OcularWM/VirtualMonitor {
+	technique { pass {
+		depth_write off
+
+    vertex_program_ref Basic.vert {
+			param_named_auto WorldViewProjection worldviewproj_matrix
+		}
+		fragment_program_ref SelfIlluminated.frag {
+      param_named Texture0 int 0
+		}
+
+		texture_unit {
+      texture dummy.bmp
+			tex_address_mode clamp
+		}
+	} }
 }
