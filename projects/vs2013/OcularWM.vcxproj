@@ -141,7 +141,7 @@
       <EntryPointSymbol>
       </EntryPointSymbol>
       <AdditionalLibraryDirectories>C:\opt\SDL2\lib\x64\$(Configuration);C:\opt\boost\stage\lib64;C:\opt\ogre\build\sdk\lib\$(Configuration);C:\opt\ogre\build\sdk\lib\$(Configuration)\opt;C:\opt\OculusSDK\LibOVR\Lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>SDL2.lib;SDL2main.lib;winmm.lib;opengl32.lib;glu32.lib;FreeImage_d.lib;OIS_d.lib;OgreMainStatic_d.lib;OgreOverlayStatic_d.lib;OgrePagingStatic_d.lib;OgrePropertyStatic_d.lib;OgreRTShaderSystemStatic_d.lib;OgreTerrainStatic_d.lib;OgreVolumeStatic_d.lib;cg.lib;freetype_d.lib;zlib_d.lib;zziplib_d.lib;Plugin_BSPSceneManagerStatic_d.lib;Plugin_CgProgramManagerStatic_d.lib;Plugin_OctreeSceneManagerStatic_d.lib;Plugin_OctreeZoneStatic_d.lib;Plugin_PCZSceneManagerStatic_d.lib;Plugin_ParticleFXStatic_d.lib;RenderSystem_Direct3D11Static_d.lib;RenderSystem_Direct3D9Static_d.lib;RenderSystem_GLStatic_d.lib;libovr64d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>SDL2.lib;SDL2main.lib;winmm.lib;opengl32.lib;glu32.lib;FreeImage_d.lib;OIS_d.lib;OgreMainStatic_d.lib;OgreOverlayStatic_d.lib;OgrePagingStatic_d.lib;OgrePropertyStatic_d.lib;OgreRTShaderSystemStatic_d.lib;OgreTerrainStatic_d.lib;OgreVolumeStatic_d.lib;cg.lib;freetype_d.lib;zlib_d.lib;zziplib_d.lib;Plugin_BSPSceneManagerStatic_d.lib;Plugin_CgProgramManagerStatic_d.lib;Plugin_OctreeSceneManagerStatic_d.lib;Plugin_OctreeZoneStatic_d.lib;Plugin_PCZSceneManagerStatic_d.lib;Plugin_ParticleFXStatic_d.lib;RenderSystem_Direct3D9Static_d.lib;RenderSystem_GLStatic_d.lib;libovr64d.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <Bscmake>
       <PreserveSbr>true</PreserveSbr>
@@ -199,7 +199,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalLibraryDirectories>C:\opt\SDL2\lib\x64\$(Configuration);C:\opt\boost\stage\lib64;C:\opt\ogre\build\sdk\lib\$(Configuration);C:\opt\ogre\build\sdk\lib\$(Configuration)\opt;C:\opt\OculusSDK\LibOVR\Lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>SDL2.lib;SDL2main.lib;winmm.lib;opengl32.lib;glu32.lib;FreeImage.lib;OIS.lib;OgreMainStatic.lib;OgreOverlayStatic.lib;OgrePagingStatic.lib;OgrePropertyStatic.lib;OgreRTShaderSystemStatic.lib;OgreTerrainStatic.lib;OgreVolumeStatic.lib;cg.lib;freetype.lib;zlib.lib;zziplib.lib;Plugin_BSPSceneManagerStatic.lib;Plugin_CgProgramManagerStatic.lib;Plugin_OctreeSceneManagerStatic.lib;Plugin_OctreeZoneStatic.lib;Plugin_PCZSceneManagerStatic.lib;Plugin_ParticleFXStatic.lib;RenderSystem_Direct3D11Static.lib;RenderSystem_Direct3D9Static.lib;RenderSystem_GLStatic.lib;libovr64.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>SDL2.lib;SDL2main.lib;winmm.lib;opengl32.lib;glu32.lib;FreeImage.lib;OIS.lib;OgreMainStatic.lib;OgreOverlayStatic.lib;OgrePagingStatic.lib;OgrePropertyStatic.lib;OgreRTShaderSystemStatic.lib;OgreTerrainStatic.lib;OgreVolumeStatic.lib;cg.lib;freetype.lib;zlib.lib;zziplib.lib;Plugin_BSPSceneManagerStatic.lib;Plugin_CgProgramManagerStatic.lib;Plugin_OctreeSceneManagerStatic.lib;Plugin_OctreeZoneStatic.lib;Plugin_PCZSceneManagerStatic.lib;Plugin_ParticleFXStatic.lib;RenderSystem_Direct3D9Static.lib;RenderSystem_GLStatic.lib;libovr64.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>copy $(TargetPath) $(SolutionDir)..\..\Deploy\$(Configuration)</Command>
