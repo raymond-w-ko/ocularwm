@@ -1,53 +1,63 @@
-material Examples/CloudyNoonSkyBox
-{
-	technique
-	{
-		pass
-		{
-			lighting off
-			depth_write off
-
-			texture_unit
-			{
-				cubic_texture cloudy_noon.jpg separateUV
-				tex_address_mode clamp
-			}
-		}
-	}
+vertex_program Basic.vert glsl {
+  source Basic.vert.glsl
+  entry_point main
 }
 
-material Examples/StormySkyBox
-{
-	technique
-	{
-		pass
-		{
-			lighting off
-			depth_write off
-
-			texture_unit
-			{
-				cubic_texture stormy.jpg separateUV
-				tex_address_mode clamp
-			}
-		}
-	}
+fragment_program SelfIlluminated.frag glsl {
+  source SelfIlluminated.frag.glsl
+  entry_point main
 }
 
-material Examples/EarlyMorningSkyBox
-{
-	technique
-	{
-		pass
-		{
-			lighting off
-			depth_write off
+material Examples/CloudyNoonSkyBox {
+	technique { pass {
+		depth_write off
 
-			texture_unit
-			{
-				cubic_texture early_morning.jpg separateUV
-				tex_address_mode clamp
-			}
+    vertex_program_ref Basic.vert {
+			param_named_auto WorldViewProjection worldviewproj_matrix
 		}
-	}
+		fragment_program_ref SelfIlluminated.frag {
+      param_named Texture0 int 0
+		}
+
+		texture_unit {
+			cubic_texture cloudy_noon.jpg separateUV
+			tex_address_mode clamp
+		}
+	} }
+}
+
+material Examples/StormySkyBox {
+	technique { pass {
+		depth_write off
+
+    vertex_program_ref Basic.vert {
+			param_named_auto WorldViewProjection worldviewproj_matrix
+		}
+		fragment_program_ref SelfIlluminated.frag {
+      param_named Texture0 int 0
+		}
+
+		texture_unit {
+			cubic_texture stormy.jpg separateUV
+			tex_address_mode clamp
+		}
+	} }
+}
+
+material Examples/EarlyMorningSkyBox {
+	technique { pass {
+		depth_write off
+
+    vertex_program_ref Basic.vert {
+			param_named_auto WorldViewProjection worldviewproj_matrix
+		}
+		fragment_program_ref SelfIlluminated.frag {
+      param_named Texture0 int 0
+		}
+
+		texture_unit {
+			cubic_texture early_morning.jpg separateUV
+			tex_address_mode clamp
+		}
+	} }
 }
