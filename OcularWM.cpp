@@ -191,8 +191,10 @@ void OcularWM::setupOgre() {
   root->installPlugin(new Ogre::OctreePlugin);
 
   root->installPlugin(new Ogre::GLPlugin);
-  root->setRenderSystem(
-      root->getRenderSystemByName("OpenGL Rendering Subsystem"));
+  Ogre::RenderSystem* rs = root->getRenderSystemByName("OpenGL Rendering Subsystem");
+  root->setRenderSystem(rs);
+  rs->setFixedPipelineEnabled(false);
+  
 
   root->initialise(false);
 
@@ -231,7 +233,7 @@ void OcularWM::setupOgreWindow() {
   Ogre::NameValuePairList params;
   params.insert(std::make_pair("title", "OcularWM"));
   params.insert(std::make_pair("FSAA", "0"));
-  params.insert(std::make_pair("vsync", "true"));
+  params.insert(std::make_pair("vsync", "false"));
   params.insert(std::make_pair("parentWindowHandle", win_handle));
   params.insert(std::make_pair("left", "0"));
   params.insert(std::make_pair("top", "0"));
@@ -537,20 +539,4 @@ void OcularWM::setupOgreVRCameras() {
 void OcularWM::setupScene() {
   mScene->setSkyBox(true, "Examples/CloudyNoonSkyBox", 1000);
   mDummyScene->setSkyBox(true, "Examples/CloudyNoonSkyBox", 1000);
-
-  /*
-  Ogre::SceneNode* node = mRootNode->createChildSceneNode();
-  Ogre::Entity* cube = mScene->createEntity("cube0", Ogre::SceneManager::PT_CUBE);
-
-  node->attachObject(cube);
-
-  float width = 0.5694f * 0.01f;
-  float height = 0.3404f * 0.01f;
-  float thickness = 0.001f * 0.01f;
-
-  node->setScale(width, height, thickness);
-  node->setPosition(0.5, 0.5, -0.5694f);
-  cube->setMaterialName("Examples/StormySkyBox");
-  node->showBoundingBox(true);
-  */
 }
