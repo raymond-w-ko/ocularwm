@@ -10,7 +10,8 @@ public:
         unsigned char a;
     };
 
-    static const Ogre::PixelFormat msBestPixelFormat;
+    static const Ogre::PixelFormat msBestPixelFormatGPU;
+    static const Ogre::PixelFormat msBestPixelFormatCPU;
 
 public:
     VirtualMonitor(Ogre::SceneManager* scene, WindowID hwnd);

@@ -11,7 +11,13 @@ class Screenshot : public boost::noncopyable {
 
   void EnsurePixelsAllocated(int width, int height);
   void Lock(Ogre::uint8** pixels, int* width, int* height);
+  bool TryLock(Ogre::uint8** pixels, int* width, int* height);
   void Unlock();
+
+  bool IsConsumed() { return mConsumed; }
+  void SetConsumed(bool consumed) { mConsumed = consumed; }
+
+  void ArrangePixelsToBestPixelFormat();
 
  protected:
   const static int msPixelSize;
@@ -19,6 +25,7 @@ class Screenshot : public boost::noncopyable {
  protected:
   const WindowID mHwnd;
 
+  bool mConsumed;
   int mWidth;
   int mHeight;
   Ogre::uint8* mPixels;

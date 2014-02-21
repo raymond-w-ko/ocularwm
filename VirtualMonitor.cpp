@@ -7,9 +7,13 @@ using namespace Ogre;
 
 unsigned int VirtualMonitor::msResourceCounter = 0;
 int VirtualMonitor::msPixelSize = 4;
-// DON'T CHANGE THIS or massive slowdowns and suttering occurs because of
-// internal pixel swapping
-const PixelFormat VirtualMonitor::msBestPixelFormat = PF_B8G8R8A8;
+// DON'T CHANGE THIS or massive slowdowns and suttering can occur because of
+// internal pixel swapping in the GPU driver
+//
+// from:
+// http://www.opengl.org/wiki/Common_Mistakes
+const PixelFormat VirtualMonitor::msBestPixelFormatGPU = PF_R8G8B8A8;
+const PixelFormat VirtualMonitor::msBestPixelFormatCPU = PF_B8G8R8A8;
 
 VirtualMonitor::~VirtualMonitor() {
   if (mTexture.get()) {
@@ -59,13 +63,11 @@ void VirtualMonitor::createObject() {
 }
 
 void VirtualMonitor::createMaterial() {
-  mMaterial = MaterialManager::getSingleton().create(
-      "VirtualMonitorMaterial" + lexical_cast<string>(mID),
-      ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
+  auto& material_man = MaterialManager::getSingleton();
+  MaterialPtr base = material_man.getByName("OcularWM/VirtualMonitor");
+  mMaterial = base->clone(
+      "VirtualMonitorMaterial" + lexical_cast<string>(mID));
   mPass = mMaterial->getTechnique(0)->getPass(0);
-  //mPass->setSceneBlending(SBT_TRANSPARENT_ALPHA);
-  mPass->setEmissive(1, 1, 1);
-  mPass->createTextureUnitState();
 }
 
 void VirtualMonitor::SetMonitorWidth(float width) {
@@ -92,7 +94,10 @@ void VirtualMonitor::Blit(ScreenshotPtr screenshot) {
 
   int width, height;
   Ogre::uint8* pixels;
-  screenshot->Lock(&pixels, &width, &height);
+  bool locked = screenshot->TryLock(&pixels, &width, &height);
+  if (!locked) {
+    return;
+  }
   if (!pixels) {
     screenshot->Unlock();
     return;
@@ -120,16 +125,21 @@ void VirtualMonitor::Blit(ScreenshotPtr screenshot) {
         TEX_TYPE_2D,
         mWidth, mHeight,
         0, // TODO: do mipmaps visually improve this / even work well with frequent updates
-        msBestPixelFormat,
+        msBestPixelFormatGPU,
         TU_DYNAMIC_WRITE_ONLY_DISCARDABLE);
     mPass->getTextureUnitState(0)->setTextureName(texture_name);
   }
 
-  HardwarePixelBufferSharedPtr buffer = mTexture->getBuffer();
-  PixelBox box(width, height, 1, msBestPixelFormat, pixels);
-  buffer->blitFromMemory(box);
+  HardwarePixelBufferSharedPtr pixel_buffer = mTexture->getBuffer();
+  PixelBox box(width, height, 1, msBestPixelFormatCPU, pixels);
+  pixel_buffer->blitFromMemory(box);
   
+  screenshot->SetConsumed(true);
   screenshot->Unlock();
+
+  char buffer[1024];
+  sprintf(buffer, "%d, %d - ", width, height);
+  //Trace(buffer);
 }
 
 void VirtualMonitor::FocusAtUser() {

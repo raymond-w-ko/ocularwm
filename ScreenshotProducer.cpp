@@ -9,6 +9,7 @@ const int Screenshot::msPixelSize = 4;
 
 Screenshot::Screenshot(WindowID hwnd)
     : mPixels(nullptr),
+      mConsumed(true),
       mHwnd(hwnd),
       mWidth(-1), mHeight(-1) {
   ;
@@ -45,8 +46,41 @@ void Screenshot::Lock(Ogre::uint8** pixels, int* width, int* height) {
   *height = mHeight;
 }
 
+bool Screenshot::TryLock(Ogre::uint8** pixels, int* width, int* height) {
+  if (!mLock.try_lock()) {
+    return false;
+  }
+
+  *pixels = mPixels;
+  *width = mWidth;
+  *height = mHeight;
+
+  return true;
+}
+
 void Screenshot::Unlock() {
   mLock.unlock();
+}
+
+void Screenshot::ArrangePixelsToBestPixelFormat() {
+  size_t num_pixels = mWidth * mHeight;
+  Ogre::uint8* pixel = mPixels;
+  // a should be copied to be absolutely correct, but since we don't use the a
+  // channel anyways, skip for speed.
+  char r, g, b/*, a*/;
+  for (size_t i = 0; i < num_pixels; ++i) {
+    b = pixel[0];
+    g = pixel[1];
+    r = pixel[2];
+    //a = pixel[3];
+
+    //pixel[0] = a;
+    pixel[1] = r;
+    pixel[2] = g;
+    pixel[3] = b;
+
+    pixel += 4;
+  }
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -77,7 +111,9 @@ void ScreenshotProducer::Stop() {
 }
 
 void ScreenshotProducer::loop() {
-  SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_LOWEST);
+  HANDLE thread_id = GetCurrentThread();
+  SetThreadPriority(thread_id, THREAD_PRIORITY_IDLE);
+  SetThreadPriorityBoost(thread_id, TRUE);
 
   for (;;) {
     // check if Stop() is called
@@ -102,36 +138,64 @@ void ScreenshotProducer::loop() {
       screenshot = mScreenshots[hwnd];
       mMapLock.unlock();
 
-      captureScreenshot(hwnd, screenshot);
+      Ogre::uint8* pixels;
+      int dummy1, dummy2;
+      screenshot->Lock(&pixels, &dummy1, &dummy2);
+      bool need_update = screenshot->IsConsumed();
+      screenshot->Unlock();
+
+      if (need_update) {
+        captureScreenshot(hwnd, screenshot);
+      }
     }
+
+    ::SwitchToThread();
   }
 }
 
 BOOL ScreenshotProducer::enumWindowsProc(WindowID hwnd) {
-  // This can cause deadlocks as the mVisibleWindowsLock is locked here and
-  // the main thread, and the WindowsProc in SDL didn't have a chacne to run
-  // yet.
+  // Exclude our own window to avoid a deadlock situation the main thread locks
+  // mVisibleWindowsLock, and goes to sleep, thus never running its own
+  // WindowProc when GetClassName() and GetWindowText() is called below
   if (mParentHwnd == hwnd)
     return TRUE;
 
-  // don't capture screenshot if window is not visible
+  // Do not capture screenshot if window is not visible
   if (!::IsWindowVisible(hwnd))
     return TRUE;
 
+  // Does not work in Window 7+, but do so just to be safe
   if (hwnd == ::GetDesktopWindow())
       return TRUE;
 
-  // maximum length according to WNDCLASSEX structure is 256, maybe need NULL
-  // byte?
-  /*
+  // Maximum length according to WNDCLASSEX structure is 256, maybe need NULL
+  // byte anyway?
   char szClass[257];
   ::GetClassName(hwnd, szClass, sizeof(szClass));
-  string win_class(szClass);
 
   char szTitle[1024];
   GetWindowText(hwnd , szTitle, sizeof(szTitle));
-  string win_title(szTitle);
-  */
+
+  // Do not capture the total area of the desktop.
+  //
+  // On a 3 monitor setup like mines this will result in XBOX HUEG textures of
+  // 5120x1080. This takes much more time than usual to process and copy to the
+  // GPU than regular desktop sized windows.
+  if (!strcmp(szClass, "Progman") && !strcmp(szTitle, "Program Manager"))
+    return TRUE;
+
+  // Also do not treat the taskbar as a real window.
+  // Windows 8 and above also has "Shell_SecondaryTrayWnd" for secondary
+  // monitors. Ignore those too.
+  if (!strcmp(szClass, "Shell_TrayWnd") || !strcmp(szClass, "Shell_SecondaryTrayWnd"))
+    return TRUE;
+
+  // TODO: maybe exclude large windows as they can take enough time to cause
+  // stutters?
+  //RECT r;
+  //GetWindowRect(hwnd, &r);
+  //int w = r.right - r.left;
+  //int h = r.bottom - r.top;
 
   mVisibleWindows.push_back(hwnd);
 
@@ -177,6 +241,8 @@ void ScreenshotProducer::captureScreenshot(WindowID hwnd, ScreenshotPtr screensh
   Ogre::uint8* pixels;
   screenshot->Lock(&pixels, &dummy1, &dummy2);
   GetDIBits(display_dc, bitmap, 0, h, pixels, &info, DIB_RGB_COLORS);
+  screenshot->ArrangePixelsToBestPixelFormat();
+  screenshot->SetConsumed(false);
   screenshot->Unlock();
 
   DeleteObject(bitmap);
