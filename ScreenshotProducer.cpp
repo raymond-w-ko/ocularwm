@@ -64,22 +64,24 @@ void Screenshot::Unlock() {
 
 void Screenshot::ArrangePixelsToBestPixelFormat() {
   size_t num_pixels = mWidth * mHeight;
-  Ogre::uint8* pixel = mPixels;
-  // a should be copied to be absolutely correct, but since we don't use the a
-  // channel anyways, skip for speed.
-  char r, g, b/*, a*/;
   for (size_t i = 0; i < num_pixels; ++i) {
-    b = pixel[0];
-    g = pixel[1];
-    r = pixel[2];
-    //a = pixel[3];
+    /*
+    //Ogre::uint8* subpixel = mPixels + (4 * i);
+    char r, g, b, a;
 
-    //pixel[0] = a;
-    pixel[1] = r;
-    pixel[2] = g;
-    pixel[3] = b;
+    b = subpixel[0];
+    g = subpixel[1];
+    r = subpixel[2];
+    a = subpixel[3];
 
-    pixel += 4;
+    subpixel[0] = a;
+    subpixel[1] = r;
+    subpixel[2] = g;
+    subpixel[3] = b;
+    */
+
+    Ogre::uint32* pixel = reinterpret_cast<uint32*>(mPixels) + i;
+    *pixel = _byteswap_ulong(*pixel);
   }
 }
 
@@ -148,8 +150,6 @@ void ScreenshotProducer::loop() {
         captureScreenshot(hwnd, screenshot);
       }
     }
-
-    ::SwitchToThread();
   }
 }
 
