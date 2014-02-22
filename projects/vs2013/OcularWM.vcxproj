@@ -183,7 +183,7 @@
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>C:\opt\SDL2\include;C:\opt\boost;C:\opt\ogre\build\sdk\include;C:\opt\ogre\build\sdk\include\OGRE;C:\opt\ogre\build\sdk\include\OGRE\RenderSystems\GL;C:\opt\ogre\build\sdk\include\OGRE\Plugins\OctreeSceneManager;C:\opt\ogre\build\sdk\include\OGRE\Plugins\ParticleFX;C:\opt\OculusSDK\LibOVR\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeaderFile>StableHeaders.hpp</PrecompiledHeaderFile>
-      <AdditionalOptions>/Zm256 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/Zm256 /Qpar-report:1 %(AdditionalOptions)</AdditionalOptions>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <OmitFramePointers>true</OmitFramePointers>

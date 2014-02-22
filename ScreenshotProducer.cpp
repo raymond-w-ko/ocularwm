@@ -64,8 +64,9 @@ void Screenshot::Unlock() {
 
 void Screenshot::ArrangePixelsToBestPixelFormat() {
   size_t num_pixels = mWidth * mHeight;
+
+  /*
   for (size_t i = 0; i < num_pixels; ++i) {
-    /*
     //Ogre::uint8* subpixel = mPixels + (4 * i);
     char r, g, b, a;
 
@@ -78,10 +79,11 @@ void Screenshot::ArrangePixelsToBestPixelFormat() {
     subpixel[1] = r;
     subpixel[2] = g;
     subpixel[3] = b;
-    */
-
-    Ogre::uint32* pixel = reinterpret_cast<uint32*>(mPixels) + i;
-    *pixel = _byteswap_ulong(*pixel);
+  }
+  */
+  Ogre::uint32* pixels = reinterpret_cast<uint32*>(mPixels);
+  for (size_t i = 0; i < num_pixels; ++i) {
+    pixels[i] = _byteswap_ulong(pixels[i]);
   }
 }
 
